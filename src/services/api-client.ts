@@ -1,8 +1,11 @@
+export const AUTH_UNAUTHORIZED_EVENT = "pincrest:auth-unauthorized";
+
 export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number | null,
     options?: ErrorOptions,
+    public readonly fieldErrors: Record<string, string> = {},
   ) {
     super(message, options);
     this.name = "ApiError";
@@ -46,7 +49,7 @@ function getApiUrl(path: string): URL {
 
 function getHttpErrorMessage(status: number): string {
   if (status === 401) {
-    return "The backend did not authorize this request.";
+    return "Email or password is incorrect.";
   }
 
   if (status === 403) {
@@ -55,6 +58,14 @@ function getHttpErrorMessage(status: number): string {
 
   if (status === 404) {
     return "The requested information could not be found.";
+  }
+
+  if (status === 409) {
+    return "An account with these details already exists.";
+  }
+
+  if (status === 422) {
+    return "Check the highlighted fields and try again.";
   }
 
   if (status === 429) {
@@ -93,6 +104,72 @@ async function getResponseErrorMessage(response: Response): Promise<string> {
   }
 
   return fallbackMessage;
+function getFieldErrors(payload: unknown): Record<string, string> {
+  if (!payload || typeof payload !== "object") {
+    return {};
+  }
+
+  const body = payload as Record<string, unknown>;
+  const errors = body.fieldErrors ?? body.errors;
+
+  if (!errors || typeof errors !== "object") {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(errors as Record<string, unknown>).flatMap(
+      ([field, value]) => {
+        const message = Array.isArray(value) ? value[0] : value;
+        return typeof message === "string"
+          ? [[field, message] as [string, string]]
+          : [];
+      },
+    ),
+  );
+}
+
+function getApiErrorMessage(payload: unknown, status: number): string {
+  if (payload && typeof payload === "object") {
+    const message = (payload as Record<string, unknown>).message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+
+  return getHttpErrorMessage(status);
+}
+
+async function readErrorPayload(response: Response): Promise<unknown> {
+  if (!response.headers.get("content-type")?.includes("application/json")) {
+    return null;
+  }
+
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+async function readSuccessPayload<T>(response: Response): Promise<T> {
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const body = await response.text();
+  if (!body.trim()) {
+    return undefined as T;
+  }
+
+  try {
+    return JSON.parse(body) as T;
+  } catch (cause) {
+    throw new ApiError(
+      "The backend service returned an invalid response.",
+      response.status,
+      { cause },
+    );
+  }
 }
 
 export async function apiRequest<T>(
@@ -111,6 +188,7 @@ export async function apiRequest<T>(
   try {
     response = await fetch(requestUrl, {
       ...init,
+      credentials: "include",
       headers,
     });
   } catch (cause) {
@@ -128,15 +206,28 @@ export async function apiRequest<T>(
   if (!response.ok) {
     const message = await getResponseErrorMessage(response);
     throw new ApiError(message, response.status);
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
+    }
+
+    throw new ApiError(getHttpErrorMessage(response.status), response.status);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   try {
     return (await response.json()) as T;
   } catch (cause) {
+    const payload = await readErrorPayload(response);
     throw new ApiError(
-      "The backend service returned an invalid response.",
+      getApiErrorMessage(payload, response.status),
       response.status,
-      { cause },
+      undefined,
+      getFieldErrors(payload),
     );
   }
+
+  return readSuccessPayload<T>(response);
 }
