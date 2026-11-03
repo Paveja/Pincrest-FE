@@ -1,0 +1,200 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { ErrorState } from "@/components/states/error-state";
+import { LoadingState } from "@/components/states/loading-state";
+import {
+  ApiError,
+  apiRequest,
+  AUTH_UNAUTHORIZED_EVENT,
+} from "@/services/api-client";
+
+export type AuthUser = Record<string, unknown>;
+
+type AuthStatus = "checking" | "authenticated" | "unauthenticated" | "error";
+
+interface AuthContextValue {
+  user: AuthUser | null;
+  status: AuthStatus;
+  isLoggingOut: boolean;
+  refreshSession: () => Promise<AuthUser | null>;
+  logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function parseAuthUser(payload: unknown): AuthUser {
+  const user = isRecord(payload) && "user" in payload ? payload.user : payload;
+
+  if (!isRecord(user) || Object.keys(user).length === 0) {
+    throw new Error("The authentication service returned an invalid user.");
+  }
+
+  return user;
+}
+
+async function loadCurrentUser(): Promise<AuthUser | null> {
+  try {
+    const payload = await apiRequest<unknown>("api/v1/auth/me");
+    return parseAuthUser(payload);
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 401) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+function isPublicAuthPath(pathname: string): boolean {
+  return (
+    pathname === "/login" ||
+    pathname.startsWith("/login/") ||
+    pathname === "/register" ||
+    pathname.startsWith("/register/")
+  );
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [status, setStatus] = useState<AuthStatus>("checking");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const refreshSession = useCallback(async () => {
+    setStatus("checking");
+
+    try {
+      const authenticatedUser = await loadCurrentUser();
+      setUser(authenticatedUser);
+      setStatus(authenticatedUser ? "authenticated" : "unauthenticated");
+      return authenticatedUser;
+    } catch (error) {
+      setUser(null);
+      setStatus("error");
+      throw error;
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    void loadCurrentUser()
+      .then((authenticatedUser) => {
+        if (active) {
+          setUser(authenticatedUser);
+          setStatus(authenticatedUser ? "authenticated" : "unauthenticated");
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setUser(null);
+          setStatus("error");
+          console.error("Unable to restore the Pincrest session.", error);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setUser(null);
+      setStatus("unauthenticated");
+    };
+
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    return () => {
+      window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (status === "authenticated" && isPublicAuthPath(pathname)) {
+      router.replace("/");
+    } else if (status === "unauthenticated" && !isPublicAuthPath(pathname)) {
+      router.replace("/login");
+    }
+  }, [pathname, router, status]);
+
+  const logout = useCallback(async () => {
+    setIsLoggingOut(true);
+
+    try {
+      await apiRequest<unknown>("api/v1/auth/logout", { method: "POST" });
+    } catch (error) {
+      if (!(error instanceof ApiError && error.status === 401)) {
+        throw error;
+      }
+    } finally {
+      setIsLoggingOut(false);
+    }
+
+    setUser(null);
+    setStatus("unauthenticated");
+  }, []);
+
+  const contextValue = useMemo(
+    () => ({ user, status, isLoggingOut, refreshSession, logout }),
+    [user, status, isLoggingOut, refreshSession, logout],
+  );
+
+  if (status === "error" && !isPublicAuthPath(pathname)) {
+    return (
+      <main className="min-h-screen px-6 py-12">
+        <ErrorState
+          title="Unable to verify your session"
+          description="Pincrest could not reach the authentication service. Check your connection and try again."
+          onRetry={() => {
+            void refreshSession().catch((error: unknown) => {
+              console.error("Unable to restore the Pincrest session.", error);
+            });
+          }}
+        />
+      </main>
+    );
+  }
+
+  const isRedirecting =
+    status === "checking" ||
+    (status === "authenticated" && isPublicAuthPath(pathname)) ||
+    (status === "unauthenticated" && !isPublicAuthPath(pathname));
+
+  if (isRedirecting) {
+    return (
+      <main className="min-h-screen px-6 py-12">
+        <LoadingState label="Checking your session" />
+      </main>
+    );
+  }
+
+  return (
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
+  );
+}
+
+export function useAuth(): AuthContextValue {
+  const auth = useContext(AuthContext);
+
+  if (!auth) {
+    throw new Error("useAuth must be used inside an AuthProvider.");
+  }
+
+  return auth;
+}

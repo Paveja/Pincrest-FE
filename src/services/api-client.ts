@@ -1,3 +1,5 @@
+export const AUTH_UNAUTHORIZED_EVENT = "pincrest:auth-unauthorized";
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -84,6 +86,7 @@ export async function apiRequest<T>(
   try {
     response = await fetch(requestUrl, {
       ...init,
+      credentials: "include",
       headers,
     });
   } catch (cause) {
@@ -99,7 +102,15 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
+    if (response.status === 401 && typeof window !== "undefined") {
+      window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
+    }
+
     throw new ApiError(getHttpErrorMessage(response.status), response.status);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   try {
