@@ -2,23 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useAuth } from "@/components/auth/auth-provider";
-
-const navigationItems = [
-  { href: "/pins", label: "Pins" },
-  { href: "/boards", label: "Boards" },
-];
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/auth-provider";
 
 export function AppHeader() {
-  const pathname = usePathname();
   const router = useRouter();
-  const { logout } = useAuth();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const { status, isLoggingOut, logout } = useAuth();
   const [logoutError, setLogoutError] = useState<string | null>(null);
 
   async function handleLogout() {
-    setIsLoggingOut(true);
     setLogoutError(null);
 
     try {
@@ -31,8 +23,6 @@ export function AppHeader() {
           ? cause.message
           : "We couldn’t sign you out. Please try again.",
       );
-    } finally {
-      setIsLoggingOut(false);
     }
   }
 
@@ -56,37 +46,27 @@ export function AppHeader() {
         </Link>
 
         <nav aria-label="Primary navigation">
-          <ul className="flex items-center gap-1 sm:gap-2">
-            {navigationItems.map((item) => {
-              const isActive =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
-
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    aria-current={isActive ? "page" : undefined}
-                    className={`inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4 ${
-                      isActive
-                        ? "text-accent border-accent border-b-2"
-                        : "text-muted-foreground hover:bg-surface-muted hover:text-foreground"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              );
-            })}
+          <ul className="flex items-center gap-2">
             <li>
-              <button
-                type="button"
-                onClick={() => void handleLogout()}
-                disabled={isLoggingOut}
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none sm:px-4"
+              <Link
+                href="/"
+                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors motion-reduce:transition-none"
               >
-                {isLoggingOut ? "Signing out…" : "Sign out"}
-              </button>
+                Your Pins
+              </Link>
             </li>
+            {status === "authenticated" ? (
+              <li>
+                <button
+                  type="button"
+                  onClick={() => void handleLogout()}
+                  disabled={isLoggingOut}
+                  className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
+                >
+                  {isLoggingOut ? "Signing out…" : "Sign out"}
+                </button>
+              </li>
+            ) : null}
           </ul>
         </nav>
       </div>
