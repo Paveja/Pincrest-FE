@@ -1,0 +1,12 @@
+
+> pincrest-fe@0.1.0 dev
+> next dev
+
+▲ Next.js 16.4.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://169.254.0.21:3000
+✓ Ready in 3.5s
+✓ Running next.config.ts took 1511ms
+- Cache Components enabled
+- Partial Prefetching enabled
+
