@@ -1,10 +1,5 @@
-import { AppShell } from "@/components/layout/app-shell";
-import { PinManagement } from "@/components/pin-management";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return (
-    <AppShell>
-      <PinManagement />
-    </AppShell>
-  );
+  redirect("/pins");
 }
