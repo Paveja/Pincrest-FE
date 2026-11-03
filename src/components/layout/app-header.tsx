@@ -46,7 +46,7 @@ export function AppHeader() {
         </Link>
 
         <nav aria-label="Primary navigation">
-          <ul className="flex items-center gap-2">
+          <ul className="flex items-center gap-1">
             <li>
               <Link
                 href="/"
@@ -55,18 +55,14 @@ export function AppHeader() {
                 Your Pins
               </Link>
             </li>
-            {status === "authenticated" ? (
-              <li>
-                <button
-                  type="button"
-                  onClick={() => void handleLogout()}
-                  disabled={isLoggingOut}
-                  className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
-                >
-                  {isLoggingOut ? "Signing out…" : "Sign out"}
-                </button>
-              </li>
-            ) : null}
+            <li>
+              <Link
+                href="/profile"
+                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors motion-reduce:transition-none"
+              >
+                Profile
+              </Link>
+            </li>
           </ul>
         </nav>
       </div>
