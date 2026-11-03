@@ -1,15 +1,83 @@
+export const SESSION_EXPIRED_EVENT = "pincrest:session-expired";
+
 export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number | null,
     options?: ErrorOptions,
+    public readonly code: string | null = null,
   ) {
     super(message, options);
     this.name = "ApiError";
   }
 }
 
-function getApiUrl(path: string): URL {
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getBackendError(
+  status: number,
+  responseText: string,
+): { code: string | null; message: string } {
+  const fallbackMessage = getHttpErrorMessage(status);
+
+  try {
+    const payload: unknown = JSON.parse(responseText);
+
+    if (isRecord(payload) && isRecord(payload.error)) {
+      return {
+        code:
+          typeof payload.error.code === "string" ? payload.error.code : null,
+        message:
+          typeof payload.error.message === "string"
+            ? payload.error.message
+            : fallbackMessage,
+      };
+    }
+  } catch {
+    // Non-JSON error bodies use the status-specific fallback message.
+  }
+
+  return { code: null, message: fallbackMessage };
+}
+
+function isAuthenticationRequest(path: string): boolean {
+  const normalizedPath = path.startsWith("/") ? path.slice(1) : path;
+  return normalizedPath.startsWith("auth/");
+}
+
+function expireBrowserSession(): void {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+  }
+}
+
+function getHttpErrorMessage(status: number): string {
+  if (status === 401) {
+    return "The backend did not authorize this request.";
+  }
+
+  if (status === 403) {
+    return "You do not have permission to complete this request.";
+  }
+
+  if (status === 404) {
+    return "The requested information could not be found.";
+  }
+
+  if (status === 429) {
+    return "Too many requests. Wait a moment and try again.";
+  }
+
+  if (status >= 500) {
+    return "The backend service is unavailable. Try again shortly.";
+  }
+
+  return "The request could not be completed.";
+}
+
+function getApiUrl(path: string): string {
   const configuredBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
 
   if (!configuredBaseUrl) {
@@ -41,31 +109,7 @@ function getApiUrl(path: string): URL {
     );
   }
 
-  return requestUrl;
-}
-
-function getHttpErrorMessage(status: number): string {
-  if (status === 401) {
-    return "The backend did not authorize this request.";
-  }
-
-  if (status === 403) {
-    return "You do not have permission to complete this request.";
-  }
-
-  if (status === 404) {
-    return "The requested information could not be found.";
-  }
-
-  if (status === 429) {
-    return "Too many requests. Wait a moment and try again.";
-  }
-
-  if (status >= 500) {
-    return "The backend service is unavailable. Try again shortly.";
-  }
-
-  return "The request could not be completed.";
+  return requestUrl.href;
 }
 
 export async function apiRequest<T>(
@@ -99,7 +143,19 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    throw new ApiError(getHttpErrorMessage(response.status), response.status);
+    const responseText = await response.text();
+    const backendError = getBackendError(response.status, responseText);
+
+    if (response.status === 401 && !isAuthenticationRequest(path)) {
+      expireBrowserSession();
+    }
+
+    throw new ApiError(
+      backendError.message,
+      response.status,
+      undefined,
+      backendError.code,
+    );
   }
 
   try {
