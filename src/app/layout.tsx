@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { AuthProvider } from "@/components/auth-provider";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import "./globals.css";
 
