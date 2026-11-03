@@ -79,6 +79,31 @@ function getHttpErrorMessage(status: number): string {
   return "The request could not be completed.";
 }
 
+async function getResponseErrorMessage(response: Response): Promise<string> {
+  const fallbackMessage = getHttpErrorMessage(response.status);
+
+  try {
+    const payload: unknown = await response.json();
+
+    if (
+      typeof payload === "object" &&
+      payload !== null &&
+      "error" in payload &&
+      typeof payload.error === "object" &&
+      payload.error !== null &&
+      "message" in payload.error &&
+      typeof payload.error.message === "string" &&
+      payload.error.message.trim()
+    ) {
+      return payload.error.message;
+    }
+  } catch (cause) {
+    if (!(cause instanceof SyntaxError)) {
+      throw new ApiError(fallbackMessage, response.status, { cause });
+    }
+  }
+
+  return fallbackMessage;
 function getFieldErrors(payload: unknown): Record<string, string> {
   if (!payload || typeof payload !== "object") {
     return {};
@@ -179,6 +204,8 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
+    const message = await getResponseErrorMessage(response);
+    throw new ApiError(message, response.status);
     if (response.status === 401 && typeof window !== "undefined") {
       window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
     }
