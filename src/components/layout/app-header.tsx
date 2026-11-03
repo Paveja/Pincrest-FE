@@ -19,13 +19,21 @@ export function AppHeader() {
         </Link>
 
         <nav aria-label="Primary navigation">
-          <ul>
+          <ul className="flex items-center gap-1">
             <li>
               <Link
                 href="/"
                 className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors motion-reduce:transition-none"
               >
                 Home
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/profile"
+                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors motion-reduce:transition-none"
+              >
+                Profile
               </Link>
             </li>
           </ul>

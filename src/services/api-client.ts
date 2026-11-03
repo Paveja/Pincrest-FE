@@ -68,6 +68,33 @@ function getHttpErrorMessage(status: number): string {
   return "The request could not be completed.";
 }
 
+async function getResponseErrorMessage(response: Response): Promise<string> {
+  const fallbackMessage = getHttpErrorMessage(response.status);
+
+  try {
+    const payload: unknown = await response.json();
+
+    if (
+      typeof payload === "object" &&
+      payload !== null &&
+      "error" in payload &&
+      typeof payload.error === "object" &&
+      payload.error !== null &&
+      "message" in payload.error &&
+      typeof payload.error.message === "string" &&
+      payload.error.message.trim()
+    ) {
+      return payload.error.message;
+    }
+  } catch (cause) {
+    if (!(cause instanceof SyntaxError)) {
+      throw new ApiError(fallbackMessage, response.status, { cause });
+    }
+  }
+
+  return fallbackMessage;
+}
+
 export async function apiRequest<T>(
   path: string,
   init: RequestInit = {},
@@ -99,7 +126,8 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    throw new ApiError(getHttpErrorMessage(response.status), response.status);
+    const message = await getResponseErrorMessage(response);
+    throw new ApiError(message, response.status);
   }
 
   try {
