@@ -295,8 +295,8 @@ export function BoardDetail({ boardId }: BoardDetailProps) {
 
               return (
                 <li key={pin.id} className="mb-4 break-inside-avoid">
-                  <article className="border-border bg-surface overflow-hidden rounded-lg border">
-                    <div className="bg-surface-muted relative aspect-[4/5]">
+                  <article className="group min-w-0">
+                    <div className="bg-surface-muted relative aspect-[4/5] overflow-hidden rounded-2xl">
                       <Image
                         src={pin.imageUrl}
                         alt={pin.title}

@@ -50,7 +50,7 @@ export function PinDetailDialog({
         onClose();
       }}
       onClose={onClose}
-      className="bg-surface text-foreground border-border backdrop:bg-foreground/40 m-auto max-h-[min(92dvh,54rem)] w-[min(100%-2rem,52rem)] overflow-y-auto rounded-xl border p-0 shadow-2xl"
+      className="bg-surface text-foreground border-border backdrop:bg-foreground/40 m-auto max-h-[min(92dvh,54rem)] w-[min(100%-2rem,56rem)] overflow-y-auto rounded-3xl border p-0 shadow-2xl"
     >
       <div className="grid md:grid-cols-[minmax(0,1fr)_minmax(16rem,0.85fr)]">
         <div className="bg-surface-muted relative aspect-[4/5] min-h-64 md:aspect-auto">

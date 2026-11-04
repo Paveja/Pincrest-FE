@@ -204,7 +204,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <section className="border-border bg-surface w-full rounded-lg border p-6 shadow-sm sm:p-9">
+    <section className="border-border bg-surface w-full rounded-3xl border p-6 shadow-sm sm:p-9">
       <div className="mb-8">
         <p className="text-accent mb-3 text-xs font-semibold tracking-[0.16em] uppercase">
           {isRegister ? "Join Pincrest" : "Your Pincrest account"}

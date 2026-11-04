@@ -105,27 +105,23 @@ export function PinFeed() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-5 py-9 sm:px-8 sm:py-12">
-      <header className="border-border flex flex-col justify-between gap-5 border-b pb-7 sm:flex-row sm:items-end sm:pb-8">
+    <section className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-6 sm:py-9 2xl:px-10">
+      <header className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="text-accent mb-3 flex items-center gap-3 text-xs font-semibold tracking-[0.16em] uppercase">
-            <span
-              aria-hidden="true"
-              className="bg-accent h-5 w-1 rounded-full"
-            />
-            Pincrest / Discover
+          <p className="text-muted-foreground mb-2 text-sm font-semibold">
+            Discover
           </p>
           <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
             Find your next idea.
           </h1>
-          <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-6 sm:text-base">
+          <p className="text-muted-foreground mt-2 max-w-xl text-sm leading-6 sm:text-base">
             Browse Pins shared by the Pincrest community and save the ones you
             want to revisit.
           </p>
         </div>
         <Link
           href="/profile/pins"
-          className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+          className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-12 shrink-0 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors motion-reduce:transition-none"
         >
           Create a Pin
         </Link>
@@ -174,7 +170,7 @@ export function PinFeed() {
           />
         ) : (
           <>
-            <ul className="columns-2 gap-4 sm:columns-3 sm:gap-5 lg:columns-4 xl:columns-5">
+            <ul className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4 xl:columns-5 2xl:columns-6">
               {pins.map((pin) => (
                 <PinCard
                   key={pin.id}
@@ -252,79 +248,88 @@ function PinCard({
 }) {
   const imageUrl = getSafeDestinationUrl(pin.imageUrl);
   const profileImage = getSafeDestinationUrl(pin.creator.profileImage);
+  const imageRatios = ["aspect-[4/5]", "aspect-[3/4]", "aspect-square"];
+  const imageRatio =
+    imageRatios[String(pin.id).charCodeAt(0) % imageRatios.length];
 
   return (
-    <li className="mb-5 break-inside-avoid">
-      <article className="group border-border bg-surface overflow-hidden rounded-lg border">
+    <li className="mb-6 break-inside-avoid">
+      <article className="group min-w-0">
+        <div
+          className={`bg-surface-muted relative overflow-hidden rounded-2xl ${imageRatio}`}
+        >
+          <button
+            type="button"
+            onClick={onOpen}
+            aria-label={`View ${pin.title}`}
+            className="focus-visible:outline-accent absolute inset-0 block w-full"
+          >
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt={pin.title}
+                fill
+                sizes="(max-width: 640px) 46vw, (max-width: 1024px) 30vw, 18vw"
+                unoptimized
+                className="object-cover transition-transform duration-300 group-hover:scale-[1.015] motion-reduce:transition-none"
+              />
+            ) : (
+              <span className="text-muted-foreground grid h-full place-items-center px-4 text-center text-sm">
+                Image unavailable
+              </span>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={onSave}
+            aria-label={`Save ${pin.title} to a Board`}
+            className="bg-accent text-accent-foreground hover:bg-accent-hover absolute top-3 right-3 inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold shadow-lg transition-colors motion-reduce:transition-none"
+          >
+            Save
+          </button>
+        </div>
+
         <button
           type="button"
           onClick={onOpen}
           aria-label={`View ${pin.title}`}
-          className="focus-visible:outline-accent block w-full text-left"
+          className="text-foreground block w-full rounded-md pt-2 text-left text-sm leading-5 font-semibold decoration-current/40 underline-offset-4 hover:underline focus-visible:underline"
         >
-          <span className="bg-surface-muted block overflow-hidden">
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt=""
-                width={800}
-                height={600}
-                sizes="(max-width: 640px) 46vw, (max-width: 1024px) 30vw, 20vw"
-                unoptimized
-                className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none"
-              />
-            ) : (
-              <span className="text-muted-foreground grid aspect-[4/5] place-items-center px-4 text-center text-sm">
-                Image unavailable
-              </span>
-            )}
-          </span>
-          <span className="text-foreground block px-3 pt-3 pb-1 text-sm leading-5 font-semibold sm:px-4">
-            {pin.title}
-          </span>
+          {pin.title}
         </button>
 
         {pin.description ? (
-          <p className="text-muted-foreground px-3 pt-1 text-sm leading-5 sm:px-4">
+          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-5">
             {pin.description}
           </p>
         ) : null}
 
-        <PinLikeButton pin={pin} />
-
-        <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-3 sm:px-4 sm:pb-4">
+        <div className="mt-2 flex min-w-0 items-center justify-between gap-1">
           <Link
             href={`/users/${encodeURIComponent(pin.creator.username)}`}
-            className="group/creator text-muted-foreground hover:text-foreground flex min-h-11 min-w-0 items-center gap-2 rounded-md text-left text-xs font-medium transition-colors motion-reduce:transition-none"
+            className="text-muted-foreground hover:text-foreground flex min-h-11 min-w-0 items-center gap-2 rounded-full text-left text-xs font-medium transition-colors motion-reduce:transition-none"
             aria-label={`View ${pin.creator.name}’s profile`}
           >
             {profileImage ? (
               <Image
                 src={profileImage}
                 alt=""
-                width={32}
-                height={32}
+                width={28}
+                height={28}
                 unoptimized
-                className="border-border size-8 shrink-0 rounded-full border object-cover"
+                className="size-7 shrink-0 rounded-full object-cover"
               />
             ) : (
               <span
                 aria-hidden="true"
-                className="bg-surface-muted text-accent border-border grid size-8 shrink-0 place-items-center rounded-full border text-xs font-semibold"
+                className="bg-surface-muted text-accent grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold"
               >
                 {pin.creator.name.trim().charAt(0).toLocaleUpperCase() || "P"}
               </span>
             )}
             <span className="min-w-0 truncate">{pin.creator.name}</span>
           </Link>
-          <button
-            type="button"
-            onClick={onSave}
-            aria-label={`Save ${pin.title} to a Board`}
-            className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 shrink-0 items-center justify-center rounded-md px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
-          >
-            Save
-          </button>
+          <PinLikeButton pin={pin} />
         </div>
       </article>
     </li>
@@ -363,7 +368,7 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
   }
 
   return (
-    <div className="px-3 pt-1 sm:px-4">
+    <div className="flex min-w-0 shrink-0 flex-col items-end">
       <button
         type="button"
         onClick={() => void toggleLike()}
@@ -371,7 +376,7 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
         aria-pressed={isLiked}
         aria-busy={isSaving}
         aria-label={`${isLiked ? "Unlike" : "Like"} ${pin.title}. ${likeCount} likes.`}
-        className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
+        className="text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
       >
         <svg
           aria-hidden="true"
@@ -387,13 +392,18 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
             d="M20.8 8.7c0 5.5-8.8 10.3-8.8 10.3S3.2 14.2 3.2 8.7A4.7 4.7 0 0 1 12 6.3a4.7 4.7 0 0 1 8.8 2.4Z"
           />
         </svg>
-        <span>{isSaving ? "Saving…" : isLiked ? "Unlike" : "Like"}</span>
+        <span className="hidden sm:inline">
+          {isSaving ? "Saving…" : isLiked ? "Unlike" : "Like"}
+        </span>
         <span className="text-muted-foreground tabular-nums">
           {likeCount.toLocaleString()}
         </span>
       </button>
       {error ? (
-        <p role="alert" className="text-danger pt-2 text-xs leading-5">
+        <p
+          role="alert"
+          className="text-danger mt-1 max-w-40 text-right text-xs leading-4"
+        >
           {error}
         </p>
       ) : null}
@@ -406,7 +416,7 @@ function FeedSkeleton() {
     <div
       role="status"
       aria-label="Loading Pins"
-      className="columns-2 gap-4 sm:columns-3 sm:gap-5 lg:columns-4 xl:columns-5"
+      className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4 xl:columns-5 2xl:columns-6"
     >
       {skeletonRatios.map((ratio, index) => (
         <div

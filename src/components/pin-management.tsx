@@ -230,12 +230,9 @@ export function PinManagement() {
             const pinId = String(pin.id);
 
             return (
-              <li
-                key={pin.id}
-                className="border-border bg-surface min-w-0 overflow-hidden rounded-lg border"
-              >
+              <li key={pin.id} className="min-w-0">
                 <div
-                  className={`relative ${index % 3 === 1 ? "aspect-[4/3]" : index % 3 === 2 ? "aspect-[3/4]" : "aspect-[4/5]"} bg-surface-muted`}
+                  className={`relative overflow-hidden rounded-2xl ${index % 3 === 1 ? "aspect-[4/3]" : index % 3 === 2 ? "aspect-[3/4]" : "aspect-[4/5]"} bg-surface-muted`}
                 >
                   <Image
                     src={pin.imageUrl}

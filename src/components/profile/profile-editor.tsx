@@ -189,7 +189,7 @@ export function ProfileEditor() {
 
       <form
         onSubmit={handleSubmit}
-        className="border-border bg-surface mt-8 rounded-lg border p-5 sm:p-8"
+        className="border-border bg-surface mt-8 rounded-3xl border p-5 shadow-sm sm:p-8"
       >
         <div className="border-border flex flex-col gap-4 border-b pb-6 sm:flex-row sm:items-center">
           {currentImageUrl ? (

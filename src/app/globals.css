@@ -2,16 +2,16 @@
 
 :root {
   color-scheme: light;
-  --background: #f4f5f0;
-  --foreground: #1e2b25;
+  --background: #ffffff;
+  --foreground: #1f1f1f;
   --surface: #ffffff;
-  --surface-muted: #e9eee8;
-  --muted-foreground: #59675e;
-  --border: #dce3dc;
-  --accent: #226d4f;
-  --accent-hover: #18543d;
+  --surface-muted: #f1f1f1;
+  --muted-foreground: #6b6b6b;
+  --border: #e6e6e6;
+  --accent: #e60023;
+  --accent-hover: #ad081b;
   --accent-foreground: #ffffff;
-  --danger: #a43d32;
+  --danger: #b42318;
   --font-family-sans: ui-sans-serif, system-ui, sans-serif;
   --font-family-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
@@ -49,4 +49,22 @@ body {
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .group > .bg-surface-muted > button:last-child {
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+  }
+
+  .group > .bg-surface-muted:hover > button:last-child,
+  .group > .bg-surface-muted:focus-within > button:last-child {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .group > .bg-surface-muted > button:last-child {
+    transition: none;
+  }
 }
