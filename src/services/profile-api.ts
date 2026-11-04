@@ -6,9 +6,9 @@ export interface UserProfile {
   username: string;
   profileImage: string | null;
   bio: string | null;
-  followersCount: number;
+  followerCount: number;
   followingCount: number;
-  pinsCount: number;
+  createdPinsCount: number;
   createdAt: string;
   isFollowing?: boolean;
 }
@@ -39,9 +39,9 @@ function isUserProfile(value: unknown): value is UserProfile {
     typeof value.username === "string" &&
     (typeof value.profileImage === "string" || value.profileImage === null) &&
     (typeof value.bio === "string" || value.bio === null) &&
-    isNonNegativeInteger(value.followersCount) &&
+    isNonNegativeInteger(value.followerCount) &&
     isNonNegativeInteger(value.followingCount) &&
-    isNonNegativeInteger(value.pinsCount) &&
+    isNonNegativeInteger(value.createdPinsCount) &&
     typeof value.createdAt === "string" &&
     (value.isFollowing === undefined || typeof value.isFollowing === "boolean")
   );
@@ -198,7 +198,7 @@ export async function updateMyProfile(
 }
 
 function getConnectionListPath(
-  userId: string,
+  username: string,
   relation: "followers" | "following",
   page: number,
   limit: number,
@@ -219,39 +219,39 @@ function getConnectionListPath(
     limit: String(limit),
   });
 
-  return `/api/v1/users/${encodeURIComponent(userId)}/${relation}?${params.toString()}`;
+  return `/api/v1/users/${encodeURIComponent(username)}/${relation}?${params.toString()}`;
 }
 
-export function followUser(userId: string): Promise<void> {
+export function followUser(username: string): Promise<void> {
   return apiRequest<void>(
-    `/api/v1/users/${encodeURIComponent(userId)}/follow`,
+    `/api/v1/users/${encodeURIComponent(username)}/follow`,
     { method: "POST" },
   );
 }
 
-export function unfollowUser(userId: string): Promise<void> {
+export function unfollowUser(username: string): Promise<void> {
   return apiRequest<void>(
-    `/api/v1/users/${encodeURIComponent(userId)}/follow`,
+    `/api/v1/users/${encodeURIComponent(username)}/follow`,
     { method: "DELETE" },
   );
 }
 
 export function getUserFollowers(
-  userId: string,
+  username: string,
   page = 1,
   limit = 20,
 ): Promise<unknown> {
   return apiRequest<unknown>(
-    getConnectionListPath(userId, "followers", page, limit),
+    getConnectionListPath(username, "followers", page, limit),
   );
 }
 
 export function getUserFollowing(
-  userId: string,
+  username: string,
   page = 1,
   limit = 20,
 ): Promise<unknown> {
   return apiRequest<unknown>(
-    getConnectionListPath(userId, "following", page, limit),
+    getConnectionListPath(username, "following", page, limit),
   );
 }
