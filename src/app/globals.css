@@ -107,3 +107,222 @@ body {
     transition: none;
   }
 }
+
+.auth-page-shell {
+  --auth-hero-deep: #760d2c;
+  --auth-card-cream: #fff3e8;
+  --auth-card-peach: #ffc9ad;
+  --auth-card-coral: #ff8e76;
+  --auth-card-yellow: #ffd166;
+  --auth-card-lilac: #ddd4ff;
+  --auth-card-ink: #4d3037;
+
+  background:
+    radial-gradient(
+      ellipse at 88% 10%,
+      color-mix(in srgb, var(--accent) 7%, transparent),
+      transparent 30rem
+    ),
+    var(--background);
+}
+
+.auth-hero-panel {
+  background:
+    radial-gradient(
+      ellipse at 88% 16%,
+      color-mix(in srgb, white 20%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(
+      142deg,
+      var(--accent) 0%,
+      var(--accent-hover) 68%,
+      var(--auth-hero-deep) 100%
+    );
+  box-shadow: 0 24px 64px -36px
+    color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+.auth-hero-copy {
+  max-width: 48%;
+}
+
+.auth-pin-collage {
+  right: 0;
+  bottom: 0;
+  width: 58%;
+  height: 100%;
+  transform-origin: center;
+  animation: auth-pin-drift 7s ease-in-out infinite alternate;
+}
+
+.auth-pin {
+  position: absolute;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid color-mix(in srgb, white 72%, transparent);
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--auth-card-ink);
+  box-shadow: 0 14px 34px -18px
+    color-mix(in srgb, var(--auth-card-ink) 58%, transparent);
+}
+
+.auth-pin svg {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  flex: 1;
+  object-fit: cover;
+}
+
+.auth-pin span {
+  padding: 0.55rem 0.7rem 0.65rem;
+  background: var(--surface);
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.auth-pin--sunset {
+  top: 3%;
+  right: 15%;
+  width: 45%;
+  aspect-ratio: 0.78;
+  transform: rotate(8deg);
+}
+
+.auth-pin--studio {
+  bottom: 1%;
+  left: 3%;
+  width: 40%;
+  aspect-ratio: 0.78;
+  transform: rotate(-8deg);
+}
+
+.auth-pin--flower {
+  top: 35%;
+  right: 1%;
+  width: 27%;
+  aspect-ratio: 1;
+  transform: rotate(10deg);
+}
+
+.auth-form-card {
+  border-color: color-mix(in srgb, var(--border) 76%, var(--accent));
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  box-shadow: 0 28px 80px -46px
+    color-mix(in srgb, var(--foreground) 44%, transparent);
+  backdrop-filter: blur(18px);
+  animation: auth-card-enter 460ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.auth-field-input {
+  transition:
+    border-color 160ms ease-out,
+    background-color 160ms ease-out,
+    transform 160ms ease-out;
+}
+
+.auth-field-input:hover {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+}
+
+.auth-field-input:focus {
+  transform: translateY(-1px);
+}
+
+.auth-form-card button[type="submit"] {
+  box-shadow: 0 8px 18px -10px
+    color-mix(in srgb, var(--accent) 75%, transparent);
+  transition:
+    transform 160ms ease-out,
+    box-shadow 160ms ease-out,
+    background-color 160ms ease-out;
+}
+
+.auth-form-card button[type="submit"]:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 13px 22px -10px
+    color-mix(in srgb, var(--accent) 78%, transparent);
+}
+
+.auth-form-card button[type="submit"]:not(:disabled):active {
+  transform: translateY(0) scale(0.985);
+}
+
+@keyframes auth-card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-pin-drift {
+  from {
+    transform: translateY(3px);
+  }
+
+  to {
+    transform: translateY(-5px);
+  }
+}
+
+@media (max-width: 767px) {
+  .auth-hero-copy {
+    max-width: 62%;
+  }
+
+  .auth-pin-collage {
+    width: 51%;
+  }
+
+  .auth-pin span {
+    display: none;
+  }
+
+  .auth-pin--sunset {
+    top: 4%;
+    right: 15%;
+    width: 43%;
+    aspect-ratio: 1.15;
+  }
+
+  .auth-pin--studio {
+    bottom: 5%;
+    left: 7%;
+    width: 42%;
+    aspect-ratio: 1.25;
+  }
+
+  .auth-pin--flower {
+    top: 31%;
+    right: 0;
+    width: 27%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-form-card,
+  .auth-pin-collage {
+    animation: none;
+  }
+
+  .auth-field-input,
+  .auth-form-card button[type="submit"] {
+    transition: none;
+  }
+
+  .auth-field-input:focus,
+  .auth-form-card button[type="submit"]:not(:disabled):hover,
+  .auth-form-card button[type="submit"]:not(:disabled):active {
+    transform: none;
+  }
+}
