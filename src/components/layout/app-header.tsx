@@ -49,6 +49,14 @@ export function AppHeader() {
                 href="/"
                 className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
               >
+                Discover
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/profile/pins"
+                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
+              >
                 Your Pins
               </Link>
             </li>

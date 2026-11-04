@@ -1,0 +1,362 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { SavePinDialog } from "@/components/boards/save-pin-dialog";
+import { PinDetailDialog } from "@/components/pins/pin-detail-dialog";
+import { EmptyState } from "@/components/states/empty-state";
+import { getPinFeedPage, type FeedPin } from "@/services/feed";
+import { getSafeDestinationUrl } from "@/services/pins";
+
+const skeletonRatios = [
+  "aspect-[4/5]",
+  "aspect-[3/4]",
+  "aspect-square",
+  "aspect-[4/5]",
+  "aspect-[3/4]",
+  "aspect-square",
+  "aspect-[4/5]",
+  "aspect-[3/4]",
+];
+
+export function PinFeed() {
+  const [pins, setPins] = useState<FeedPin[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [retryToken, setRetryToken] = useState(0);
+  const [detailPin, setDetailPin] = useState<FeedPin | null>(null);
+  const [savePin, setSavePin] = useState<FeedPin | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    void getPinFeedPage(1, controller.signal)
+      .then((result) => {
+        setPins(result.pins);
+        setPage(result.page);
+        setHasNextPage(result.hasNextPage);
+      })
+      .catch((cause: unknown) => {
+        if (!controller.signal.aborted) {
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "The Pin feed could not be loaded. Try again.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [retryToken]);
+
+  async function loadNextPage() {
+    if (isLoadingMore || !hasNextPage) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+    setError(null);
+
+    try {
+      const result = await getPinFeedPage(page + 1);
+      setPins((currentPins) => {
+        const seenIds = new Set(currentPins.map((pin) => String(pin.id)));
+        const newPins = result.pins.filter((pin) => {
+          const key = String(pin.id);
+          if (seenIds.has(key)) {
+            return false;
+          }
+          seenIds.add(key);
+          return true;
+        });
+
+        return [...currentPins, ...newPins];
+      });
+      setPage(result.page);
+      setHasNextPage(result.hasNextPage);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "More Pins could not be loaded. Try again.",
+      );
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
+
+  function retryInitialLoad() {
+    setIsLoading(true);
+    setError(null);
+    setPins([]);
+    setPage(1);
+    setHasNextPage(false);
+    setRetryToken((current) => current + 1);
+  }
+
+  return (
+    <section className="mx-auto w-full max-w-7xl px-5 py-9 sm:px-8 sm:py-12">
+      <header className="border-border flex flex-col justify-between gap-5 border-b pb-7 sm:flex-row sm:items-end sm:pb-8">
+        <div>
+          <p className="text-accent mb-3 flex items-center gap-3 text-xs font-semibold tracking-[0.16em] uppercase">
+            <span
+              aria-hidden="true"
+              className="bg-accent h-5 w-1 rounded-full"
+            />
+            Pincrest / Discover
+          </p>
+          <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
+            Find your next idea.
+          </h1>
+          <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-6 sm:text-base">
+            Browse Pins shared by the Pincrest community and save the ones you
+            want to revisit.
+          </p>
+        </div>
+        <Link
+          href="/profile/pins"
+          className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+        >
+          Create a Pin
+        </Link>
+      </header>
+
+      {notice ? (
+        <p role="status" className="text-accent mt-5 text-sm font-medium">
+          {notice}
+        </p>
+      ) : null}
+
+      <section aria-label="Latest Pins" aria-busy={isLoading} className="pt-7">
+        {isLoading ? (
+          <FeedSkeleton />
+        ) : error && pins.length === 0 ? (
+          <div className="border-border bg-surface rounded-lg border px-6 py-10 text-center">
+            <h2 className="text-foreground text-lg font-semibold">
+              The feed isn’t available
+            </h2>
+            <p
+              role="alert"
+              className="text-muted-foreground mt-2 text-sm leading-6"
+            >
+              {error}
+            </p>
+            <button
+              type="button"
+              onClick={retryInitialLoad}
+              className="bg-accent text-accent-foreground hover:bg-accent-hover mt-5 inline-flex min-h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+            >
+              Try again
+            </button>
+          </div>
+        ) : pins.length === 0 ? (
+          <EmptyState
+            title="No Pins in the feed yet"
+            description="When the community shares something new, you’ll find it here. You can also create a Pin of your own."
+            action={
+              <Link
+                href="/profile/pins"
+                className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+              >
+                Create your first Pin
+              </Link>
+            }
+          />
+        ) : (
+          <>
+            <ul className="columns-2 gap-4 sm:columns-3 sm:gap-5 lg:columns-4 xl:columns-5">
+              {pins.map((pin) => (
+                <PinCard
+                  key={pin.id}
+                  pin={pin}
+                  onOpen={() => setDetailPin(pin)}
+                  onSave={() => {
+                    setNotice(null);
+                    setSavePin(pin);
+                  }}
+                />
+              ))}
+            </ul>
+
+            {error ? (
+              <div className="border-danger/30 bg-danger/5 mt-7 rounded-lg border px-5 py-4">
+                <p role="alert" className="text-danger text-sm leading-6">
+                  {error}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void loadNextPage()}
+                  disabled={isLoadingMore}
+                  className="text-accent hover:text-accent-hover mt-2 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 disabled:cursor-wait disabled:opacity-60"
+                >
+                  Retry loading more Pins
+                </button>
+              </div>
+            ) : null}
+
+            {hasNextPage ? (
+              <div className="flex justify-center py-8">
+                <button
+                  type="button"
+                  onClick={() => void loadNextPage()}
+                  disabled={isLoadingMore}
+                  className="border-border bg-surface text-foreground hover:bg-surface-muted inline-flex min-h-12 min-w-44 items-center justify-center rounded-md border px-6 text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
+                >
+                  {isLoadingMore ? "Loading Pins…" : "Load more Pins"}
+                </button>
+              </div>
+            ) : null}
+          </>
+        )}
+      </section>
+
+      {detailPin ? (
+        <PinDetailDialog
+          pin={detailPin}
+          onClose={() => setDetailPin(null)}
+          onSave={() => {
+            setDetailPin(null);
+            setSavePin(detailPin);
+          }}
+        />
+      ) : null}
+      {savePin ? (
+        <SavePinDialog
+          pin={savePin}
+          onClose={() => setSavePin(null)}
+          onSaved={(board) => setNotice(`Saved to ${board.name}.`)}
+        />
+      ) : null}
+    </section>
+  );
+}
+
+function PinCard({
+  pin,
+  onOpen,
+  onSave,
+}: {
+  pin: FeedPin;
+  onOpen: () => void;
+  onSave: () => void;
+}) {
+  const imageUrl = getSafeDestinationUrl(pin.imageUrl);
+  const profileImage = getSafeDestinationUrl(pin.creator.profileImage);
+
+  return (
+    <li className="mb-5 break-inside-avoid">
+      <article className="group border-border bg-surface overflow-hidden rounded-lg border">
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={`View ${pin.title}`}
+          className="focus-visible:outline-accent block w-full text-left"
+        >
+          <span className="bg-surface-muted block overflow-hidden">
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt=""
+                width={800}
+                height={600}
+                sizes="(max-width: 640px) 46vw, (max-width: 1024px) 30vw, 20vw"
+                unoptimized
+                className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none"
+              />
+            ) : (
+              <span className="text-muted-foreground grid aspect-[4/5] place-items-center px-4 text-center text-sm">
+                Image unavailable
+              </span>
+            )}
+          </span>
+          <span className="text-foreground block px-3 pt-3 pb-1 text-sm leading-5 font-semibold sm:px-4">
+            {pin.title}
+          </span>
+        </button>
+
+        {pin.description ? (
+          <p className="text-muted-foreground px-3 pt-1 text-sm leading-5 sm:px-4">
+            {pin.description}
+          </p>
+        ) : null}
+
+        <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-3 sm:px-4 sm:pb-4">
+          <Link
+            href={`/users/${encodeURIComponent(pin.creator.username)}`}
+            className="group/creator text-muted-foreground hover:text-foreground flex min-h-11 min-w-0 items-center gap-2 rounded-md text-left text-xs font-medium transition-colors motion-reduce:transition-none"
+            aria-label={`View ${pin.creator.name}’s profile`}
+          >
+            {profileImage ? (
+              <Image
+                src={profileImage}
+                alt=""
+                width={32}
+                height={32}
+                unoptimized
+                className="border-border size-8 shrink-0 rounded-full border object-cover"
+              />
+            ) : (
+              <span
+                aria-hidden="true"
+                className="bg-surface-muted text-accent border-border grid size-8 shrink-0 place-items-center rounded-full border text-xs font-semibold"
+              >
+                {pin.creator.name.trim().charAt(0).toLocaleUpperCase() || "P"}
+              </span>
+            )}
+            <span className="min-w-0 truncate">{pin.creator.name}</span>
+          </Link>
+          <button
+            type="button"
+            onClick={onSave}
+            aria-label={`Save ${pin.title} to a Board`}
+            className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 shrink-0 items-center justify-center rounded-md px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
+          >
+            Save
+          </button>
+        </div>
+      </article>
+    </li>
+  );
+}
+
+function FeedSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Loading Pins"
+      className="columns-2 gap-4 sm:columns-3 sm:gap-5 lg:columns-4 xl:columns-5"
+    >
+      {skeletonRatios.map((ratio, index) => (
+        <div
+          key={`feed-skeleton-${index}`}
+          className="border-border bg-surface mb-5 break-inside-avoid overflow-hidden rounded-lg border"
+        >
+          <div
+            aria-hidden="true"
+            className={`bg-surface-muted ${ratio} animate-pulse motion-reduce:animate-none`}
+          />
+          <div className="flex items-center gap-2 p-3 sm:p-4">
+            <span
+              aria-hidden="true"
+              className="bg-surface-muted size-8 shrink-0 animate-pulse rounded-full motion-reduce:animate-none"
+            />
+            <span
+              aria-hidden="true"
+              className="bg-surface-muted h-3 w-2/3 animate-pulse rounded motion-reduce:animate-none"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
