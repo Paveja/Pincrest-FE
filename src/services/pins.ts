@@ -48,7 +48,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function parsePin(value: unknown): Pin {
+export function parsePin(value: unknown): Pin {
   if (
     !isRecord(value) ||
     !isEntityId(value.id) ||

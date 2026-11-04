@@ -27,7 +27,7 @@ export function AppHeader() {
 
   return (
     <header className="border-border bg-surface border-b">
-      <div className="mx-auto flex min-h-[4.5rem] max-w-6xl items-center justify-between gap-4 px-5 sm:px-8">
+      <div className="mx-auto flex min-h-[4.5rem] max-w-6xl flex-wrap items-center justify-between gap-2 px-5 py-2 sm:flex-nowrap sm:gap-4 sm:px-8 sm:py-0">
         <Link
           href="/"
           aria-label="Pincrest home"
@@ -42,17 +42,30 @@ export function AppHeader() {
           <span className="text-lg font-semibold tracking-tight">Pincrest</span>
         </Link>
 
-        <nav aria-label="Primary navigation">
-          <ul className="flex items-center gap-1">
-          <ul>
-            <li className="flex items-center gap-2">
-          <ul className="flex items-center gap-2">
+        <nav className="w-full sm:w-auto" aria-label="Primary navigation">
+          <ul className="flex items-center justify-between gap-0.5 sm:justify-end sm:gap-1">
             <li>
               <Link
                 href="/"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors motion-reduce:transition-none"
+                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
               >
                 Your Pins
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/boards"
+                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
+              >
+                Boards
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/profile"
+                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
+              >
+                Profile
               </Link>
             </li>
             {status === "authenticated" ? (
@@ -61,32 +74,12 @@ export function AppHeader() {
                   type="button"
                   onClick={() => void handleLogout()}
                   disabled={isLoggingOut}
-                  className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
+                  className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none sm:px-4"
                 >
                   {isLoggingOut ? "Signing out…" : "Sign out"}
                 </button>
               </li>
             ) : null}
-              ) : null}
-            </li>
-            <li>
-              <button
-                type="button"
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none"
-              >
-                {isLoggingOut ? "Signing out…" : "Log out"}
-              </button>
-            </li>
-            <li>
-              <Link
-                href="/profile"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-4 text-sm font-medium transition-colors motion-reduce:transition-none"
-              >
-                Profile
-              </Link>
-            </li>
           </ul>
         </nav>
       </div>
