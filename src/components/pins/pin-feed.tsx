@@ -5,20 +5,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { SavePinDialog } from "@/components/boards/save-pin-dialog";
 import { PinDetailDialog } from "@/components/pins/pin-detail-dialog";
+import {
+  masonryClassName,
+  pinRatioAt,
+  PinTile,
+} from "@/components/pins/pin-tile";
 import { EmptyState } from "@/components/states/empty-state";
+import { Notice } from "@/components/states/notice";
 import { getPinFeedPage, type FeedPin } from "@/services/feed";
 import { getSafeDestinationUrl, likePin, unlikePin } from "@/services/pins";
-
-const skeletonRatios = [
-  "aspect-[4/5]",
-  "aspect-[3/4]",
-  "aspect-square",
-  "aspect-[4/5]",
-  "aspect-[3/4]",
-  "aspect-square",
-  "aspect-[4/5]",
-  "aspect-[3/4]",
-];
 
 export function PinFeed() {
   const [pins, setPins] = useState<FeedPin[]>([]);
@@ -105,44 +100,17 @@ export function PinFeed() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-5 py-9 sm:px-8 sm:py-12">
-      <header className="border-border flex flex-col justify-between gap-5 border-b pb-7 sm:flex-row sm:items-end sm:pb-8">
-        <div>
-          <p className="text-accent mb-3 flex items-center gap-3 text-xs font-semibold tracking-[0.16em] uppercase">
-            <span
-              aria-hidden="true"
-              className="bg-accent h-5 w-1 rounded-full"
-            />
-            Pincrest / Discover
-          </p>
-          <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-            Find your next idea.
-          </h1>
-          <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-6 sm:text-base">
-            Browse Pins shared by the Pincrest community and save the ones you
-            want to revisit.
-          </p>
-        </div>
-        <Link
-          href="/profile/pins"
-          className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 shrink-0 items-center justify-center rounded-md border px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
-        >
-          Create a Pin
-        </Link>
-      </header>
+    <section className="mx-auto w-full max-w-[120rem] px-3 pt-2 pb-10 sm:px-5">
+      <h1 className="sr-only">Discover Pins</h1>
 
-      {notice ? (
-        <p role="status" className="text-accent mt-5 text-sm font-medium">
-          {notice}
-        </p>
-      ) : null}
+      {notice ? <Notice>{notice}</Notice> : null}
 
-      <section aria-label="Latest Pins" aria-busy={isLoading} className="pt-7">
+      <section aria-label="Latest Pins" aria-busy={isLoading}>
         {isLoading ? (
           <FeedSkeleton />
         ) : error && pins.length === 0 ? (
-          <div className="border-border bg-surface rounded-lg border px-6 py-10 text-center">
-            <h2 className="text-foreground text-lg font-semibold">
+          <div className="bg-surface-muted mx-auto mt-6 max-w-xl rounded-3xl px-6 py-12 text-center">
+            <h2 className="text-foreground text-xl font-semibold">
               The feed isn’t available
             </h2>
             <p
@@ -154,7 +122,7 @@ export function PinFeed() {
             <button
               type="button"
               onClick={retryInitialLoad}
-              className="bg-accent text-accent-foreground hover:bg-accent-hover mt-5 inline-flex min-h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+              className="bg-accent text-accent-foreground hover:bg-accent-hover mt-6 inline-flex min-h-12 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors motion-reduce:transition-none"
             >
               Try again
             </button>
@@ -166,7 +134,7 @@ export function PinFeed() {
             action={
               <Link
                 href="/profile/pins"
-                className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+                className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-12 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors motion-reduce:transition-none"
               >
                 Create your first Pin
               </Link>
@@ -174,9 +142,9 @@ export function PinFeed() {
           />
         ) : (
           <>
-            <ul className="columns-2 gap-4 sm:columns-3 sm:gap-5 lg:columns-4 xl:columns-5">
+            <ul className={masonryClassName}>
               {pins.map((pin) => (
-                <PinCard
+                <FeedPinTile
                   key={pin.id}
                   pin={pin}
                   onOpen={() => setDetailPin(pin)}
@@ -189,7 +157,7 @@ export function PinFeed() {
             </ul>
 
             {error ? (
-              <div className="border-danger/30 bg-danger/5 mt-7 rounded-lg border px-5 py-4">
+              <div className="bg-danger/10 mx-auto mt-4 max-w-xl rounded-3xl px-5 py-4 text-center">
                 <p role="alert" className="text-danger text-sm leading-6">
                   {error}
                 </p>
@@ -197,7 +165,7 @@ export function PinFeed() {
                   type="button"
                   onClick={() => void loadNextPage()}
                   disabled={isLoadingMore}
-                  className="text-accent hover:text-accent-hover mt-2 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 disabled:cursor-wait disabled:opacity-60"
+                  className="text-danger mt-1 inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 disabled:cursor-wait disabled:opacity-60"
                 >
                   Retry loading more Pins
                 </button>
@@ -210,7 +178,7 @@ export function PinFeed() {
                   type="button"
                   onClick={() => void loadNextPage()}
                   disabled={isLoadingMore}
-                  className="border-border bg-surface text-foreground hover:bg-surface-muted inline-flex min-h-12 min-w-44 items-center justify-center rounded-md border px-6 text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
+                  className="bg-surface-muted text-foreground hover:bg-border inline-flex min-h-12 min-w-48 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
                 >
                   {isLoadingMore ? "Loading Pins…" : "Load more Pins"}
                 </button>
@@ -241,7 +209,7 @@ export function PinFeed() {
   );
 }
 
-function PinCard({
+function FeedPinTile({
   pin,
   onOpen,
   onSave,
@@ -254,80 +222,41 @@ function PinCard({
   const profileImage = getSafeDestinationUrl(pin.creator.profileImage);
 
   return (
-    <li className="mb-5 break-inside-avoid">
-      <article className="group border-border bg-surface overflow-hidden rounded-lg border">
-        <button
-          type="button"
-          onClick={onOpen}
-          aria-label={`View ${pin.title}`}
-          className="focus-visible:outline-accent block w-full text-left"
+    <PinTile
+      title={pin.title}
+      description={pin.description}
+      imageUrl={imageUrl}
+      onOpen={onOpen}
+      onSave={onSave}
+    >
+      <div className="flex items-center justify-between gap-1 pt-1">
+        <Link
+          href={`/users/${encodeURIComponent(pin.creator.username)}`}
+          className="text-muted-foreground hover:text-foreground -ml-1 flex min-h-11 min-w-0 items-center gap-2 rounded-full pr-2 pl-1 text-xs font-medium transition-colors motion-reduce:transition-none"
+          aria-label={`View ${pin.creator.name}’s profile`}
         >
-          <span className="bg-surface-muted block overflow-hidden">
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt=""
-                width={800}
-                height={600}
-                sizes="(max-width: 640px) 46vw, (max-width: 1024px) 30vw, 20vw"
-                unoptimized
-                className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none"
-              />
-            ) : (
-              <span className="text-muted-foreground grid aspect-[4/5] place-items-center px-4 text-center text-sm">
-                Image unavailable
-              </span>
-            )}
-          </span>
-          <span className="text-foreground block px-3 pt-3 pb-1 text-sm leading-5 font-semibold sm:px-4">
-            {pin.title}
-          </span>
-        </button>
-
-        {pin.description ? (
-          <p className="text-muted-foreground px-3 pt-1 text-sm leading-5 sm:px-4">
-            {pin.description}
-          </p>
-        ) : null}
-
+          {profileImage ? (
+            <Image
+              src={profileImage}
+              alt=""
+              width={32}
+              height={32}
+              unoptimized
+              className="size-8 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="bg-surface-muted text-foreground grid size-8 shrink-0 place-items-center rounded-full text-xs font-semibold"
+            >
+              {pin.creator.name.trim().charAt(0).toLocaleUpperCase() || "P"}
+            </span>
+          )}
+          <span className="min-w-0 truncate">{pin.creator.name}</span>
+        </Link>
         <PinLikeButton pin={pin} />
-
-        <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-3 sm:px-4 sm:pb-4">
-          <Link
-            href={`/users/${encodeURIComponent(pin.creator.username)}`}
-            className="group/creator text-muted-foreground hover:text-foreground flex min-h-11 min-w-0 items-center gap-2 rounded-md text-left text-xs font-medium transition-colors motion-reduce:transition-none"
-            aria-label={`View ${pin.creator.name}’s profile`}
-          >
-            {profileImage ? (
-              <Image
-                src={profileImage}
-                alt=""
-                width={32}
-                height={32}
-                unoptimized
-                className="border-border size-8 shrink-0 rounded-full border object-cover"
-              />
-            ) : (
-              <span
-                aria-hidden="true"
-                className="bg-surface-muted text-accent border-border grid size-8 shrink-0 place-items-center rounded-full border text-xs font-semibold"
-              >
-                {pin.creator.name.trim().charAt(0).toLocaleUpperCase() || "P"}
-              </span>
-            )}
-            <span className="min-w-0 truncate">{pin.creator.name}</span>
-          </Link>
-          <button
-            type="button"
-            onClick={onSave}
-            aria-label={`Save ${pin.title} to a Board`}
-            className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 shrink-0 items-center justify-center rounded-md px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
-          >
-            Save
-          </button>
-        </div>
-      </article>
-    </li>
+      </div>
+    </PinTile>
   );
 }
 
@@ -363,7 +292,7 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
   }
 
   return (
-    <div className="px-3 pt-1 sm:px-4">
+    <div className="shrink-0">
       <button
         type="button"
         onClick={() => void toggleLike()}
@@ -371,7 +300,7 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
         aria-pressed={isLiked}
         aria-busy={isSaving}
         aria-label={`${isLiked ? "Unlike" : "Like"} ${pin.title}. ${likeCount} likes.`}
-        className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
+        className="text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
       >
         <svg
           aria-hidden="true"
@@ -379,7 +308,7 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
           fill={isLiked ? "currentColor" : "none"}
           stroke="currentColor"
           strokeWidth="1.8"
-          className="text-accent size-4"
+          className={`size-5 ${isLiked ? "text-accent" : ""}`}
         >
           <path
             strokeLinecap="round"
@@ -387,13 +316,13 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
             d="M20.8 8.7c0 5.5-8.8 10.3-8.8 10.3S3.2 14.2 3.2 8.7A4.7 4.7 0 0 1 12 6.3a4.7 4.7 0 0 1 8.8 2.4Z"
           />
         </svg>
-        <span>{isSaving ? "Saving…" : isLiked ? "Unlike" : "Like"}</span>
-        <span className="text-muted-foreground tabular-nums">
-          {likeCount.toLocaleString()}
-        </span>
+        <span className="tabular-nums">{likeCount.toLocaleString()}</span>
       </button>
       {error ? (
-        <p role="alert" className="text-danger pt-2 text-xs leading-5">
+        <p
+          role="alert"
+          className="text-danger fixed right-4 bottom-4 left-4 z-40 mx-auto max-w-sm rounded-full bg-white px-5 py-3 text-center text-sm shadow-lg"
+        >
           {error}
         </p>
       ) : null}
@@ -402,31 +331,24 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
 }
 
 function FeedSkeleton() {
+  const ratios = Array.from({ length: 18 }, (_, index) => pinRatioAt(index));
+
   return (
     <div
       role="status"
       aria-label="Loading Pins"
-      className="columns-2 gap-4 sm:columns-3 sm:gap-5 lg:columns-4 xl:columns-5"
+      className={masonryClassName}
     >
-      {skeletonRatios.map((ratio, index) => (
-        <div
-          key={`feed-skeleton-${index}`}
-          className="border-border bg-surface mb-5 break-inside-avoid overflow-hidden rounded-lg border"
-        >
+      {ratios.map((ratio, index) => (
+        <div key={`feed-skeleton-${index}`} className="mb-4 break-inside-avoid">
           <div
             aria-hidden="true"
-            className={`bg-surface-muted ${ratio} animate-pulse motion-reduce:animate-none`}
+            className={`bg-surface-muted ${ratio} animate-pulse rounded-2xl motion-reduce:animate-none`}
           />
-          <div className="flex items-center gap-2 p-3 sm:p-4">
-            <span
-              aria-hidden="true"
-              className="bg-surface-muted size-8 shrink-0 animate-pulse rounded-full motion-reduce:animate-none"
-            />
-            <span
-              aria-hidden="true"
-              className="bg-surface-muted h-3 w-2/3 animate-pulse rounded motion-reduce:animate-none"
-            />
-          </div>
+          <div
+            aria-hidden="true"
+            className="bg-surface-muted mt-3 h-3 w-2/3 animate-pulse rounded-full motion-reduce:animate-none"
+          />
         </div>
       ))}
     </div>

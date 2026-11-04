@@ -2,17 +2,19 @@
 
 :root {
   color-scheme: light;
-  --background: #f4f5f0;
-  --foreground: #1e2b25;
+  --background: #ffffff;
+  --foreground: #111111;
   --surface: #ffffff;
-  --surface-muted: #e9eee8;
-  --muted-foreground: #59675e;
-  --border: #dce3dc;
-  --accent: #226d4f;
-  --accent-hover: #18543d;
+  --surface-muted: #efefef;
+  --muted-foreground: #5f5f5f;
+  --border: #e2e2e2;
+  --accent: #e60023;
+  --accent-hover: #ad081b;
   --accent-foreground: #ffffff;
-  --danger: #a43d32;
-  --font-family-sans: ui-sans-serif, system-ui, sans-serif;
+  --danger: #b3261e;
+  --font-family-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
   --font-family-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
 
@@ -31,6 +33,17 @@
   --font-mono: var(--font-family-mono);
 }
 
+/*
+ * Shape roles: controls are near-pill, containers and media are generously
+ * rounded, dialogs are the softest surface. Existing rounded-md / -lg / -xl
+ * utilities pick these up so every screen shares one shape language.
+ */
+@theme {
+  --radius-md: 1.25rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -41,12 +54,21 @@ body {
   font-family: var(--font-family-sans);
 }
 
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 ::selection {
-  background: var(--surface-muted);
+  background: #ffd9de;
   color: var(--foreground);
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--foreground);
   outline-offset: 3px;
+}
+
+dialog::backdrop {
+  background: rgb(17 17 17 / 0.55);
 }

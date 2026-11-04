@@ -7,6 +7,7 @@ import { useAuth } from "@/components/auth-provider";
 import { BoardEditorDialog } from "@/components/boards/board-editor-dialog";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { Notice } from "@/components/states/notice";
 import {
   createBoard,
   deleteBoard,
@@ -119,30 +120,26 @@ export function BoardManagement({ username }: BoardManagementProps) {
   }
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
-      <header className="border-border flex flex-col justify-between gap-6 border-b pb-7 sm:flex-row sm:items-end sm:pb-8">
-        <div>
-          <p className="text-accent mb-3 flex items-center gap-3 text-xs font-semibold tracking-[0.16em] uppercase">
-            <span
-              aria-hidden="true"
-              className="bg-accent h-5 w-1 rounded-full"
-            />
-            Pincrest / Boards
+    <section className="mx-auto w-full max-w-[120rem] px-3 pt-4 pb-12 sm:px-5">
+      <header className="flex flex-col items-center gap-2 text-center">
+        <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
+          {displayName} Boards
+        </h1>
+        <p className="text-muted-foreground max-w-xl text-sm leading-6 sm:text-base">
+          {isMine
+            ? "Gather the Pins you want to return to in one place."
+            : `Explore the public collections shared by @${username}.`}
+        </p>
+        {!isLoading && !loadError ? (
+          <p className="text-muted-foreground text-sm">
+            {boards.length} {boards.length === 1 ? "Board" : "Boards"}
           </p>
-          <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-            {displayName} Boards
-          </h1>
-          <p className="text-muted-foreground mt-3 max-w-xl text-sm leading-6 sm:text-base">
-            {isMine
-              ? "Gather the Pins you want to return to in one place."
-              : `Explore the public collections shared by @${username}.`}
-          </p>
-        </div>
+        ) : null}
         {isMine ? (
           <button
             type="button"
             onClick={() => openEditor(null)}
-            className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-md px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+            className="bg-accent text-accent-foreground hover:bg-accent-hover mt-2 inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-full px-6 text-sm font-semibold transition-colors motion-reduce:transition-none"
           >
             <span aria-hidden="true" className="text-xl leading-none">
               +
@@ -152,30 +149,11 @@ export function BoardManagement({ username }: BoardManagementProps) {
         ) : null}
       </header>
 
-      {notice ? (
-        <p role="status" className="text-accent mt-5 text-sm font-medium">
-          {notice}
-        </p>
-      ) : null}
-      {actionError ? (
-        <p role="alert" className="text-danger mt-5 text-sm font-medium">
-          {actionError}
-        </p>
-      ) : null}
-
-      <div className="mt-8 flex min-h-8 items-center justify-between gap-4">
-        <h2 className="text-foreground text-lg font-semibold tracking-tight">
-          {isMine ? "Your collection" : "Public Boards"}
-        </h2>
-        {!isLoading && !loadError ? (
-          <p className="text-muted-foreground text-sm">
-            {boards.length} {boards.length === 1 ? "Board" : "Boards"}
-          </p>
-        ) : null}
-      </div>
+      {notice ? <Notice>{notice}</Notice> : null}
+      {actionError ? <Notice tone="error">{actionError}</Notice> : null}
 
       {isLoading ? (
-        <div className="mt-5">
+        <div className="mt-8">
           <LoadingState label="Loading Boards" />
         </div>
       ) : loadError ? (
@@ -189,13 +167,16 @@ export function BoardManagement({ username }: BoardManagementProps) {
           }}
         />
       ) : boards.length === 0 ? (
-        <div className="border-border bg-surface mt-5 flex min-h-72 flex-col items-center justify-center rounded-lg border px-6 py-12 text-center">
-          <span aria-hidden="true" className="text-accent text-3xl">
+        <div className="bg-surface-muted mx-auto mt-8 flex min-h-72 max-w-2xl flex-col items-center justify-center rounded-3xl px-6 py-12 text-center">
+          <span
+            aria-hidden="true"
+            className="bg-surface text-foreground grid size-14 place-items-center rounded-full text-3xl"
+          >
             +
           </span>
-          <h3 className="text-foreground mt-4 text-xl font-semibold tracking-tight">
+          <h2 className="text-foreground mt-4 text-xl font-semibold tracking-tight">
             {isMine ? "Your first Board starts here" : "No public Boards yet"}
-          </h3>
+          </h2>
           <p className="text-muted-foreground mt-2 max-w-md text-sm leading-6">
             {isMine
               ? "Create a Board, then save Pins to build a collection around an idea or place."
@@ -205,14 +186,14 @@ export function BoardManagement({ username }: BoardManagementProps) {
             <button
               type="button"
               onClick={() => openEditor(null)}
-              className="bg-accent text-accent-foreground hover:bg-accent-hover mt-6 inline-flex min-h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+              className="bg-accent text-accent-foreground hover:bg-accent-hover mt-6 inline-flex min-h-12 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors motion-reduce:transition-none"
             >
               Create your first Board
             </button>
           ) : null}
         </div>
       ) : (
-        <ul className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+        <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {boards.map((board) => {
             const coverImage = safeImageUrl(board.coverImage);
             const canManage =
@@ -222,54 +203,44 @@ export function BoardManagement({ username }: BoardManagementProps) {
 
             return (
               <li key={board.id} className="min-w-0">
-                <article className="border-border bg-surface overflow-hidden rounded-lg border">
+                <article>
                   <Link
                     href={`/boards/${encodeURIComponent(String(board.id))}`}
-                    className="group block focus-visible:outline-offset-[-3px]"
+                    className="group block rounded-3xl"
                   >
-                    <div className="bg-surface-muted relative aspect-[16/9] overflow-hidden">
+                    <div className="bg-surface-muted relative aspect-[4/3] overflow-hidden rounded-3xl">
                       {coverImage ? (
                         <Image
                           src={coverImage}
                           alt=""
                           fill
                           unoptimized
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          className="object-cover transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 17vw"
+                          className="object-cover transition-transform duration-300 group-hover:scale-[1.04] motion-reduce:transition-none"
                         />
                       ) : (
-                        <div className="border-border border-b-accent flex h-full items-end border-b-4 p-5">
-                          <span className="text-accent/25 text-6xl leading-none font-semibold tracking-tight">
-                            {board.name.trim().charAt(0).toLocaleUpperCase() ||
-                              "B"}
-                          </span>
+                        <div className="text-muted-foreground/60 grid h-full place-items-center text-6xl font-semibold tracking-tight">
+                          {board.name.trim().charAt(0).toLocaleUpperCase() ||
+                            "B"}
                         </div>
                       )}
                     </div>
-                    <div className="p-4 sm:p-5">
-                      <h3 className="text-foreground group-hover:text-accent text-lg font-semibold tracking-tight transition-colors motion-reduce:transition-none">
-                        {board.name}
-                      </h3>
-                      {board.description ? (
-                        <p className="text-muted-foreground mt-2 line-clamp-3 text-sm leading-6">
-                          {board.description}
-                        </p>
-                      ) : (
-                        <p className="text-muted-foreground mt-2 text-sm leading-6">
-                          No description
-                        </p>
-                      )}
-                    </div>
+                    <h2 className="text-foreground mt-2 truncate px-1 text-base font-semibold">
+                      {board.name}
+                    </h2>
+                    <p className="text-muted-foreground line-clamp-1 px-1 text-sm">
+                      {board.description || "No description"}
+                    </p>
                   </Link>
 
                   {canManage ? (
                     deletingBoardId === String(board.id) ? (
                       <div
-                        className="border-border border-t px-4 py-4 sm:px-5"
+                        className="bg-surface-muted mt-3 rounded-3xl px-4 py-3"
                         role="group"
                         aria-label={`Confirm deleting ${board.name}`}
                       >
-                        <p className="text-muted-foreground text-sm leading-5">
+                        <p className="text-foreground text-sm leading-5">
                           Delete this Board? Its saved Pins will be removed from
                           the Board.
                         </p>
@@ -278,7 +249,7 @@ export function BoardManagement({ username }: BoardManagementProps) {
                             type="button"
                             onClick={() => setDeletingBoardId(null)}
                             disabled={isDeleting}
-                            className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center justify-center rounded-md border px-3 text-sm font-medium disabled:opacity-60"
+                            className="bg-surface text-foreground hover:bg-border inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-semibold disabled:opacity-60"
                           >
                             Keep Board
                           </button>
@@ -286,25 +257,25 @@ export function BoardManagement({ username }: BoardManagementProps) {
                             type="button"
                             onClick={() => void handleDelete(board)}
                             disabled={isDeleting}
-                            className="bg-danger inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+                            className="bg-danger inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
                           >
                             {isDeleting ? "Deleting…" : "Delete Board"}
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="border-border flex gap-2 border-t px-4 py-3 sm:px-5">
+                      <div className="mt-1 flex gap-1">
                         <button
                           type="button"
                           onClick={() => openEditor(board)}
-                          className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 flex-1 items-center justify-center rounded-md border px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
+                          className="text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-semibold transition-colors motion-reduce:transition-none"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeletingBoardId(String(board.id))}
-                          className="text-danger hover:bg-danger/5 inline-flex min-h-11 flex-1 items-center justify-center rounded-md px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
+                          className="text-danger hover:bg-danger/10 inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-semibold transition-colors motion-reduce:transition-none"
                         >
                           Delete
                         </button>

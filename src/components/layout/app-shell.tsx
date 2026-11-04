@@ -7,9 +7,9 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="min-h-screen">
+    <div className="flex min-h-screen flex-col">
       <AppHeader />
-      <main id="main-content" className="min-h-[calc(100vh-4.5rem)]">
+      <main id="main-content" className="flex-1">
         {children}
       </main>
     </div>

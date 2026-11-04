@@ -5,8 +5,14 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PinDetailDialog } from "@/components/pins/pin-detail-dialog";
+import {
+  masonryClassName,
+  pinRatioAt,
+  PinTile,
+} from "@/components/pins/pin-tile";
 import { SavePinDialog } from "@/components/boards/save-pin-dialog";
 import { LoadingState } from "@/components/states/loading-state";
+import { Notice } from "@/components/states/notice";
 import { getSafeImageUrl } from "@/services/profile-api";
 import { getSafeDestinationUrl, type Pin } from "@/services/pins";
 import {
@@ -15,8 +21,6 @@ import {
   type SearchPage,
   type SearchUser,
 } from "@/services/search";
-
-const PIN_IMAGE_RATIOS = ["aspect-[4/5]", "aspect-[3/4]", "aspect-square"];
 
 type SearchType = "pins" | "users";
 type SearchData =
@@ -57,6 +61,7 @@ export function SearchResults() {
   const [failure, setFailure] = useState<KeyedSearchError | null>(null);
   const [detailPin, setDetailPin] = useState<Pin | null>(null);
   const [savePin, setSavePin] = useState<Pin | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!query) {
@@ -108,62 +113,57 @@ export function SearchResults() {
   const isLoading = Boolean(query && !currentResponse && !currentError);
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-5 py-9 sm:px-8 sm:py-12">
-      <header className="border-border flex flex-col gap-3 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-accent mb-2 text-xs font-semibold tracking-[0.16em] uppercase">
-            Pincrest / Explore
-          </p>
-          <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-            Search
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm leading-6 sm:text-base">
-            Find Pins to save and people to follow.
-          </p>
+    <section className="mx-auto w-full max-w-[120rem] px-3 pt-2 pb-10 sm:px-5">
+      <header className="flex flex-col items-center gap-3 pt-2 text-center">
+        <h1 className="text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">
+          {query ? (
+            <>
+              Results for{" "}
+              <span className="break-words">“{query}”</span>
+            </>
+          ) : (
+            "Search"
+          )}
+        </h1>
+
+        <div
+          role="group"
+          className="flex flex-wrap justify-center gap-2"
+          aria-label="Search result type"
+        >
+          <button
+            type="button"
+            aria-pressed={type === "pins"}
+            onClick={() => updateSearchParams({ type: "pins", page: "1" })}
+            className={`inline-flex min-h-11 items-center rounded-full px-5 text-sm font-semibold transition-colors motion-reduce:transition-none ${
+              type === "pins"
+                ? "bg-foreground text-background"
+                : "bg-surface-muted text-foreground hover:bg-border"
+            }`}
+          >
+            Pins
+          </button>
+          <button
+            type="button"
+            aria-pressed={type === "users"}
+            onClick={() => updateSearchParams({ type: "users", page: "1" })}
+            className={`inline-flex min-h-11 items-center rounded-full px-5 text-sm font-semibold transition-colors motion-reduce:transition-none ${
+              type === "users"
+                ? "bg-foreground text-background"
+                : "bg-surface-muted text-foreground hover:bg-border"
+            }`}
+          >
+            People
+          </button>
         </div>
-        {query ? (
-          <p className="text-muted-foreground max-w-full truncate text-sm sm:max-w-80">
-            Results for{" "}
-            <span className="text-foreground font-medium">“{query}”</span>
-          </p>
-        ) : null}
       </header>
 
-      <div
-        role="group"
-        className="border-border mt-5 flex flex-wrap gap-2 border-b"
-        aria-label="Search result type"
-      >
-        <button
-          type="button"
-          aria-pressed={type === "pins"}
-          onClick={() => updateSearchParams({ type: "pins", page: "1" })}
-          className={`inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-semibold transition-colors motion-reduce:transition-none ${
-            type === "pins"
-              ? "border-accent text-accent"
-              : "text-muted-foreground hover:text-foreground border-transparent"
-          }`}
-        >
-          Pins
-        </button>
-        <button
-          type="button"
-          aria-pressed={type === "users"}
-          onClick={() => updateSearchParams({ type: "users", page: "1" })}
-          className={`inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-semibold transition-colors motion-reduce:transition-none ${
-            type === "users"
-              ? "border-accent text-accent"
-              : "text-muted-foreground hover:text-foreground border-transparent"
-          }`}
-        >
-          People
-        </button>
-      </div>
+      {notice ? <Notice>{notice}</Notice> : null}
 
       {!query ? (
         <section
           role="status"
-          className="border-border bg-surface mt-7 rounded-lg border px-6 py-12 text-center sm:py-16"
+          className="bg-surface-muted mx-auto mt-8 max-w-2xl rounded-3xl px-6 py-14 text-center sm:py-16"
         >
           <h2 className="text-foreground text-xl font-semibold tracking-tight">
             What are you looking for?
@@ -174,7 +174,7 @@ export function SearchResults() {
           </p>
         </section>
       ) : isLoading ? (
-        <div className="mt-7" aria-live="polite">
+        <div className="mt-8" aria-live="polite">
           <LoadingState
             label={type === "pins" ? "Searching Pins" : "Searching people"}
           />
@@ -182,7 +182,7 @@ export function SearchResults() {
       ) : currentError ? (
         <section
           role="alert"
-          className="border-border bg-surface mt-7 rounded-lg border px-6 py-10 text-center"
+          className="bg-surface-muted mx-auto mt-8 max-w-2xl rounded-3xl px-6 py-12 text-center"
         >
           <h2 className="text-foreground text-lg font-semibold">
             Search isn’t available right now
@@ -193,7 +193,7 @@ export function SearchResults() {
           <button
             type="button"
             onClick={() => setRetryKey((value) => value + 1)}
-            className="bg-accent text-accent-foreground hover:bg-accent-hover mt-5 inline-flex min-h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+            className="bg-accent text-accent-foreground hover:bg-accent-hover mt-6 inline-flex min-h-12 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors motion-reduce:transition-none"
           >
             Try again
           </button>
@@ -216,54 +216,21 @@ export function SearchResults() {
               total={currentResponse.results.pagination.total}
               type="Pin"
             />
-            <ul className="mt-5 columns-2 gap-4 sm:columns-3 sm:gap-5 lg:columns-4">
-              {currentResponse.results.items.map((pin, index) => {
-                const imageUrl = getSafeDestinationUrl(pin.imageUrl);
-                const ratio = PIN_IMAGE_RATIOS[index % PIN_IMAGE_RATIOS.length];
-
-                return (
-                  <li key={pin.id} className="mb-4 break-inside-avoid sm:mb-5">
-                    <article className="group border-border bg-surface overflow-hidden rounded-lg border">
-                      <div
-                        className={`bg-surface-muted relative overflow-hidden ${ratio}`}
-                      >
-                        {imageUrl ? (
-                          <Image
-                            src={imageUrl}
-                            alt={pin.title}
-                            fill
-                            unoptimized
-                            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                            className="object-cover transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none"
-                          />
-                        ) : (
-                          <span className="text-muted-foreground grid h-full place-items-center px-4 text-center text-sm">
-                            Image unavailable
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-3 sm:p-4">
-                        <h2 className="text-foreground line-clamp-2 text-sm leading-5 font-semibold sm:text-base">
-                          {pin.title}
-                        </h2>
-                        {pin.description ? (
-                          <p className="text-muted-foreground mt-2 line-clamp-3 text-sm leading-5">
-                            {pin.description}
-                          </p>
-                        ) : null}
-                        <button
-                          type="button"
-                          onClick={() => setDetailPin(pin)}
-                          aria-label={`View Pin details for ${pin.title}`}
-                          className="border-border text-foreground hover:bg-surface-muted mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-md border px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
-                        >
-                          View Pin
-                        </button>
-                      </div>
-                    </article>
-                  </li>
-                );
-              })}
+            <ul className={`mt-5 ${masonryClassName}`}>
+              {currentResponse.results.items.map((pin, index) => (
+                <PinTile
+                  key={pin.id}
+                  title={pin.title}
+                  description={pin.description}
+                  imageUrl={getSafeDestinationUrl(pin.imageUrl)}
+                  ratio={pinRatioAt(index)}
+                  onOpen={() => setDetailPin(pin)}
+                  onSave={() => {
+                    setNotice(null);
+                    setSavePin(pin);
+                  }}
+                />
+              ))}
             </ul>
             <Pagination
               page={page}
@@ -292,7 +259,7 @@ export function SearchResults() {
               total={currentResponse.results.pagination.total}
               type="person"
             />
-            <ul className="border-border bg-surface divide-border mt-5 divide-y rounded-lg border">
+            <ul className="mx-auto mt-5 grid max-w-5xl gap-2 sm:grid-cols-2">
               {currentResponse.results.items.map((user) => (
                 <UserResult key={user.id} user={user} />
               ))}
@@ -322,7 +289,7 @@ export function SearchResults() {
         <SavePinDialog
           pin={savePin}
           onClose={() => setSavePin(null)}
-          onSaved={() => undefined}
+          onSaved={(board) => setNotice(`Saved to ${board.name}.`)}
         />
       ) : null}
     </section>
@@ -331,7 +298,10 @@ export function SearchResults() {
 
 function ResultsCount({ total, type }: { total: number; type: string }) {
   return (
-    <p className="text-muted-foreground mt-5 text-sm" aria-live="polite">
+    <p
+      className="text-muted-foreground mt-4 text-center text-sm"
+      aria-live="polite"
+    >
       {total.toLocaleString()}{" "}
       {total === 1 ? type : type === "person" ? "people" : `${type}s`} found
     </p>
@@ -342,7 +312,7 @@ function EmptySearchResults({ type, query }: { type: string; query: string }) {
   return (
     <section
       role="status"
-      className="border-border bg-surface mt-5 rounded-lg border px-6 py-12 text-center"
+      className="bg-surface-muted mx-auto mt-8 max-w-2xl rounded-3xl px-6 py-14 text-center"
     >
       <h2 className="text-foreground text-lg font-semibold">
         No {type} found for “{query}”
@@ -363,21 +333,21 @@ function UserResult({ user }: { user: SearchUser }) {
     <li>
       <Link
         href={`/users/${encodeURIComponent(user.username)}`}
-        className="hover:bg-surface-muted focus-visible:bg-surface-muted flex min-h-20 items-center gap-4 px-4 py-4 transition-colors motion-reduce:transition-none sm:px-6"
+        className="hover:bg-surface-muted focus-visible:bg-surface-muted flex min-h-20 items-center gap-4 rounded-3xl px-4 py-4 transition-colors motion-reduce:transition-none"
       >
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt=""
-            width={48}
-            height={48}
+            width={56}
+            height={56}
             unoptimized
-            className="border-border size-12 shrink-0 rounded-full border object-cover"
+            className="size-14 shrink-0 rounded-full object-cover"
           />
         ) : (
           <span
             aria-hidden="true"
-            className="bg-surface-muted text-accent border-border grid size-12 shrink-0 place-items-center rounded-full border text-base font-semibold"
+            className="bg-surface-muted text-foreground grid size-14 shrink-0 place-items-center rounded-full text-lg font-semibold"
           >
             {initial}
           </span>
@@ -394,12 +364,6 @@ function UserResult({ user }: { user: SearchUser }) {
               {user.bio}
             </span>
           ) : null}
-        </span>
-        <span
-          aria-hidden="true"
-          className="text-muted-foreground shrink-0 text-lg"
-        >
-          →
         </span>
       </Link>
     </li>
@@ -422,13 +386,13 @@ function Pagination({
   return (
     <nav
       aria-label="Search result pages"
-      className="border-border mt-8 flex items-center justify-between gap-4 border-t pt-5"
+      className="mt-8 flex items-center justify-center gap-4"
     >
       <button
         type="button"
         onClick={() => onChange(page - 1)}
         disabled={page <= 1}
-        className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center justify-center rounded-md border px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+        className="bg-surface-muted text-foreground hover:bg-border inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
       >
         Previous
       </button>
@@ -439,7 +403,7 @@ function Pagination({
         type="button"
         onClick={() => onChange(page + 1)}
         disabled={page >= pagination.totalPages}
-        className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center justify-center rounded-md border px-4 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+        className="bg-surface-muted text-foreground hover:bg-border inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
       >
         Next
       </button>

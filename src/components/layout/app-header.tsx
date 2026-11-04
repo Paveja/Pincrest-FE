@@ -5,6 +5,28 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth-provider";
 
+const NAV_ITEMS = [
+  { href: "/", label: "Discover" },
+  { href: "/profile/pins", label: "Your Pins" },
+  { href: "/boards", label: "Boards" },
+  { href: "/profile", label: "Profile" },
+] as const;
+
+function isActivePath(pathname: string, href: string): boolean {
+  if (href === "/") {
+    return pathname === "/";
+  }
+
+  if (href === "/profile") {
+    return pathname === "/profile" || pathname.startsWith("/settings");
+  }
+
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+const navLinkBase =
+  "inline-flex min-h-11 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors motion-reduce:transition-none";
+
 export function AppHeader() {
   const pathname = usePathname();
   const router = useRouter();
@@ -104,32 +126,79 @@ export function AppHeader() {
   }
 
   return (
-    <header className="border-border bg-surface border-b">
-      <div className="mx-auto flex min-h-[4.5rem] max-w-6xl flex-wrap items-center justify-between gap-2 px-5 py-2 lg:flex-nowrap lg:gap-4 lg:px-8 lg:py-0">
+    <header className="bg-surface sticky top-0 z-30">
+      <div className="mx-auto flex max-w-[120rem] flex-wrap items-center gap-x-2 gap-y-1 px-3 py-2 sm:px-5 lg:flex-nowrap lg:gap-x-3">
         <Link
           href="/"
           aria-label="Pincrest home"
-          className="text-foreground hover:text-accent-hover inline-flex min-h-11 items-center gap-3 rounded-md transition-colors motion-reduce:transition-none"
+          className="text-accent hover:bg-surface-muted inline-flex min-h-11 items-center gap-2 rounded-full pr-3 pl-1 transition-colors motion-reduce:transition-none"
         >
           <span
             aria-hidden="true"
-            className="bg-accent text-accent-foreground grid size-8 place-items-center rounded-md text-sm font-bold"
+            className="bg-accent text-accent-foreground grid size-9 place-items-center rounded-full text-lg font-bold"
           >
             P
           </span>
-          <span className="text-lg font-semibold tracking-tight">Pincrest</span>
+          <span className="hidden text-xl font-bold tracking-tight sm:inline">
+            Pincrest
+          </span>
         </Link>
+
+        <nav
+          className="order-3 -mx-1 w-full overflow-x-auto lg:order-none lg:mx-0 lg:w-auto lg:overflow-visible"
+          aria-label="Primary navigation"
+        >
+          <ul className="flex items-center gap-1 px-1 lg:px-0">
+            {NAV_ITEMS.map((item) => {
+              const active = isActivePath(pathname, item.href);
+
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={`${navLinkBase} ${
+                      active
+                        ? "bg-foreground text-background"
+                        : "text-foreground hover:bg-surface-muted"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
 
         <form
           role="search"
           aria-label="Search Pincrest"
           onSubmit={handleSearchSubmit}
-          className="order-2 flex w-full sm:order-none sm:max-w-xl sm:min-w-48 sm:flex-1"
+          className="order-2 min-w-0 flex-1 lg:order-none"
         >
           <label className="sr-only" htmlFor="site-search">
             Search Pins and people
           </label>
-          <div className="relative flex-1">
+          <div className="bg-surface-muted focus-within:outline-foreground relative flex items-center rounded-full focus-within:outline-2 focus-within:outline-offset-2">
+            <button
+              type="submit"
+              aria-label="Search"
+              className="text-muted-foreground hover:text-foreground absolute left-1 inline-flex size-11 items-center justify-center rounded-full transition-colors motion-reduce:transition-none"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                className="size-5"
+              >
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="m20 20-4.2-4.2" />
+              </svg>
+            </button>
             <input
               key={`${pathname}:${searchParams.get("q") ?? ""}`}
               ref={searchInputRef}
@@ -142,74 +211,26 @@ export function AppHeader() {
               maxLength={120}
               placeholder="Search Pins and people"
               autoComplete="off"
-              className="border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-accent h-11 w-full rounded-md border py-2 pr-20 pl-3 text-sm transition-colors outline-none motion-reduce:transition-none"
+              className="text-foreground placeholder:text-muted-foreground h-12 w-full rounded-full bg-transparent pr-4 pl-12 text-base outline-none"
             />
-            <button
-              type="submit"
-              aria-label="Search"
-              className="bg-accent text-accent-foreground hover:bg-accent-hover absolute top-1/2 right-1 inline-flex min-h-11 -translate-y-1/2 items-center justify-center rounded px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
-            >
-              Search
-            </button>
           </div>
         </form>
 
-        <nav
-          className="order-3 w-full sm:order-none sm:w-auto"
-          aria-label="Primary navigation"
-        >
-          <ul className="flex items-center justify-between gap-0.5 sm:justify-end sm:gap-1">
-            <li>
-              <Link
-                href="/"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
-              >
-                Discover
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/profile/pins"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
-              >
-                Your Pins
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/boards"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
-              >
-                Boards
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/profile"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
-              >
-                Profile
-              </Link>
-            </li>
-            {status === "authenticated" ? (
-              <li>
-                <button
-                  type="button"
-                  onClick={() => void handleLogout()}
-                  disabled={isLoggingOut}
-                  className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none sm:px-4"
-                >
-                  {isLoggingOut ? "Signing out…" : "Sign out"}
-                </button>
-              </li>
-            ) : null}
-          </ul>
-        </nav>
+        {status === "authenticated" ? (
+          <button
+            type="button"
+            onClick={() => void handleLogout()}
+            disabled={isLoggingOut}
+            className={`${navLinkBase} text-foreground hover:bg-surface-muted disabled:cursor-wait disabled:opacity-60`}
+          >
+            {isLoggingOut ? "Signing out…" : "Sign out"}
+          </button>
+        ) : null}
       </div>
       {logoutError ? (
         <p
           role="alert"
-          className="text-danger mx-auto max-w-6xl px-5 pb-3 text-sm sm:px-8"
+          className="text-danger mx-auto max-w-[120rem] px-5 pb-3 text-sm"
         >
           {logoutError}
         </p>
