@@ -10,6 +10,8 @@ export interface PinCreator {
 
 export interface FeedPin extends Pin {
   creator: PinCreator;
+  isLiked: boolean;
+  likeCount: number;
 }
 
 export interface PinFeedPage {
@@ -49,13 +51,21 @@ function parseCreator(value: unknown): PinCreator {
 }
 
 function parseFeedPin(value: unknown): FeedPin {
-  if (!isRecord(value)) {
+  if (
+    !isRecord(value) ||
+    typeof value.isLiked !== "boolean" ||
+    typeof value.likeCount !== "number" ||
+    !Number.isSafeInteger(value.likeCount) ||
+    value.likeCount < 0
+  ) {
     throw new Error("The feed service returned an invalid Pin.");
   }
 
   return {
     ...parsePin(value),
     creator: parseCreator(value.creator),
+    isLiked: value.isLiked,
+    likeCount: value.likeCount,
   };
 }
 
