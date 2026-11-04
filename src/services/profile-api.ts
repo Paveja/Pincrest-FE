@@ -10,6 +10,7 @@ export interface UserProfile {
   followingCount: number;
   pinsCount: number;
   createdAt: string;
+  isFollowing?: boolean;
 }
 
 export interface ProfilePin {
@@ -41,7 +42,8 @@ function isUserProfile(value: unknown): value is UserProfile {
     isNonNegativeInteger(value.followersCount) &&
     isNonNegativeInteger(value.followingCount) &&
     isNonNegativeInteger(value.pinsCount) &&
-    typeof value.createdAt === "string"
+    typeof value.createdAt === "string" &&
+    (value.isFollowing === undefined || typeof value.isFollowing === "boolean")
   );
 }
 
@@ -95,12 +97,12 @@ export function getSafeImageUrl(value: string | null): string | null {
 }
 
 export async function getCurrentSession(signal?: AbortSignal): Promise<void> {
-  await apiRequest<unknown>("auth/me", getSessionOptions(signal));
+  await apiRequest<unknown>("/api/v1/auth/me", getSessionOptions(signal));
 }
 
 export async function getMyProfile(signal?: AbortSignal): Promise<UserProfile> {
   const response = await apiRequest<DataEnvelope<unknown>>(
-    "users/me",
+    "/api/v1/users/me",
     getSessionOptions(signal),
   );
 
@@ -112,11 +114,19 @@ export async function getPublicProfile(
   signal?: AbortSignal,
 ): Promise<UserProfile> {
   const response = await apiRequest<DataEnvelope<unknown>>(
-    `users/${encodeURIComponent(username)}`,
+    `/api/v1/users/${encodeURIComponent(username)}`,
     getSessionOptions(signal),
   );
+  const profile = getResponseData(response, isUserProfile, "profile");
 
-  return getResponseData(response, isUserProfile, "profile");
+  if (typeof profile.isFollowing !== "boolean") {
+    throw new ApiError(
+      "The backend returned an invalid follow status for this profile.",
+      null,
+    );
+  }
+
+  return profile;
 }
 
 async function getPins(
@@ -133,14 +143,14 @@ async function getPins(
 }
 
 export function getMyPins(signal?: AbortSignal): Promise<ProfilePin[]> {
-  return getPins("pins/mine", signal);
+  return getPins("/api/v1/pins/mine", signal);
 }
 
 export function getPublicPins(
   username: string,
   signal?: AbortSignal,
 ): Promise<ProfilePin[]> {
-  return getPins(`users/${encodeURIComponent(username)}/pins`, signal);
+  return getPins(`/api/v1/users/${encodeURIComponent(username)}/pins`, signal);
 }
 
 export async function uploadProfileImage(file: File): Promise<string> {
@@ -151,11 +161,14 @@ export async function uploadProfileImage(file: File): Promise<string> {
   const body = new FormData();
   body.set("image", file);
 
-  const response = await apiRequest<DataEnvelope<unknown>>("uploads/images", {
-    method: "POST",
-    body,
-    credentials: "include",
-  });
+  const response = await apiRequest<DataEnvelope<unknown>>(
+    "/api/v1/uploads/images",
+    {
+      method: "POST",
+      body,
+      credentials: "include",
+    },
+  );
 
   const result = getResponseData(
     response,
@@ -172,7 +185,7 @@ export async function uploadProfileImage(file: File): Promise<string> {
 export async function updateMyProfile(
   profile: Pick<UserProfile, "name" | "username" | "bio" | "profileImage">,
 ): Promise<UserProfile> {
-  const response = await apiRequest<DataEnvelope<unknown>>("users/me", {
+  const response = await apiRequest<DataEnvelope<unknown>>("/api/v1/users/me", {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

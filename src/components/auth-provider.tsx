@@ -25,6 +25,7 @@ type AuthStatus = "checking" | "authenticated" | "unauthenticated" | "error";
 interface AuthContextValue {
   user: AuthUser | null;
   status: AuthStatus;
+  error: string | null;
   isLoggingOut: boolean;
   refreshSession: () => Promise<AuthUser | null>;
   logout: () => Promise<void>;
@@ -37,7 +38,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function parseAuthUser(payload: unknown): AuthUser {
-  const user = isRecord(payload) && "user" in payload ? payload.user : payload;
+  const data =
+    isRecord(payload) && isRecord(payload.data) ? payload.data : payload;
+  const user = isRecord(data) && "user" in data ? data.user : data;
 
   if (!isRecord(user) || Object.keys(user).length === 0) {
     throw new Error("The authentication service returned an invalid user.");
@@ -76,20 +79,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
   const [status, setStatus] = useState<AuthStatus>("checking");
+  const [error, setError] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const refreshSession = useCallback(async () => {
     setStatus("checking");
+    setError(null);
 
     try {
       const authenticatedUser = await loadCurrentUser();
       setUser(authenticatedUser);
       setStatus(authenticatedUser ? "authenticated" : "unauthenticated");
       return authenticatedUser;
-    } catch (error) {
+    } catch (cause) {
       setUser(null);
       setStatus("error");
-      throw error;
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Unable to check your session. Try again.",
+      );
+      throw cause;
     }
   }, []);
 
@@ -101,13 +111,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (active) {
           setUser(authenticatedUser);
           setStatus(authenticatedUser ? "authenticated" : "unauthenticated");
+          setError(null);
         }
       })
-      .catch((error: unknown) => {
+      .catch((cause: unknown) => {
         if (active) {
           setUser(null);
           setStatus("error");
-          console.error("Unable to restore the Pincrest session.", error);
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "Unable to check your session. Try again.",
+          );
+          console.error("Unable to restore the Pincrest session.", cause);
         }
       });
 
@@ -120,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleUnauthorized = () => {
       setUser(null);
       setStatus("unauthenticated");
+      setError(null);
     };
 
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
@@ -157,11 +174,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(null);
     setStatus("unauthenticated");
+    setError(null);
   }, []);
 
   const contextValue = useMemo(
-    () => ({ user, status, isLoggingOut, refreshSession, logout }),
-    [user, status, isLoggingOut, refreshSession, logout],
+    () => ({ user, status, error, isLoggingOut, refreshSession, logout }),
+    [user, status, error, isLoggingOut, refreshSession, logout],
   );
 
   if (status === "error" && !isPublicAuthPath(pathname)) {

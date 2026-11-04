@@ -49,7 +49,7 @@ function getApiUrl(path: string): URL {
 
 function getHttpErrorMessage(status: number): string {
   if (status === 401) {
-    return "Email or password is incorrect.";
+    return "Your session has expired. Sign in and try again.";
   }
 
   if (status === 403) {
@@ -77,33 +77,6 @@ function getHttpErrorMessage(status: number): string {
   }
 
   return "The request could not be completed.";
-}
-
-async function getResponseErrorMessage(response: Response): Promise<string> {
-  const fallbackMessage = getHttpErrorMessage(response.status);
-
-  try {
-    const payload: unknown = await response.json();
-
-    if (
-      typeof payload === "object" &&
-      payload !== null &&
-      "error" in payload &&
-      typeof payload.error === "object" &&
-      payload.error !== null &&
-      "message" in payload.error &&
-      typeof payload.error.message === "string" &&
-      payload.error.message.trim()
-    ) {
-      return payload.error.message;
-    }
-  } catch (cause) {
-    if (!(cause instanceof SyntaxError)) {
-      throw new ApiError(fallbackMessage, response.status, { cause });
-    }
-  }
-
-  return fallbackMessage;
 }
 
 function getFieldErrors(payload: unknown): Record<string, string> {
@@ -298,24 +271,17 @@ export async function apiRequest<T>(
       window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
     }
 
-    const message = await getResponseErrorMessage(response);
-    throw new ApiError(message, response.status);
-  }
-
-  if (response.status === 204) {
-    return undefined as T;
-  }
-
-  try {
-    return (await response.json()) as T;
-  } catch (cause) {
     const payload = await readErrorPayload(response);
     throw new ApiError(
       getApiErrorMessage(payload, response.status),
       response.status,
-      { cause },
+      undefined,
       getFieldErrors(payload),
     );
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   return readSuccessPayload<T>(response);

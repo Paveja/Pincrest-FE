@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth-provider";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
@@ -16,6 +17,8 @@ import {
   getPublicPins,
   getPublicProfile,
   getSafeImageUrl,
+  followUser,
+  unfollowUser,
   type ProfilePin,
   type UserProfile,
 } from "@/services/profile-api";
@@ -179,6 +182,11 @@ function ProfileView({
   isMine,
   onRetry,
 }: ProfileViewProps) {
+  const { user } = useAuth();
+  const isOwnProfile =
+    (typeof user?.id === "string" || typeof user?.id === "number") &&
+    String(user.id) === profile.id;
+
   return (
     <div className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
       <Link
@@ -208,14 +216,13 @@ function ProfileView({
             <Count label="following" value={profile.followingCount} />
             <Count label="pins" value={profile.pinsCount} />
           </dl>
-          {!isMine ? (
-            <p
-              role="status"
-              className="text-muted-foreground bg-surface-muted mt-4 rounded-md px-4 py-3 text-left text-sm leading-6"
-            >
-              Follow controls and connection lists are pending backend contract
-              confirmation.
-            </p>
+          {!isMine && !isOwnProfile ? (
+            <FollowButton
+              key={profile.id}
+              profileId={profile.id}
+              profileName={profile.name}
+              initialIsFollowing={profile.isFollowing === true}
+            />
           ) : null}
         </div>
 
@@ -286,6 +293,79 @@ function ProfileView({
           <PinWall pins={pins} />
         )}
       </section>
+    </div>
+  );
+}
+
+function FollowButton({
+  profileId,
+  profileName,
+  initialIsFollowing,
+}: {
+  profileId: string;
+  profileName: string;
+  initialIsFollowing: boolean;
+}) {
+  const { status } = useAuth();
+  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function toggleFollow() {
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      if (isFollowing) {
+        await unfollowUser(profileId);
+      } else {
+        await followUser(profileId);
+      }
+
+      setIsFollowing((current) => !current);
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "The follow change could not be saved. Try again.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  if (status !== "authenticated") {
+    return (
+      <Link
+        href="/login"
+        className="border-border text-foreground hover:bg-surface-muted mt-4 inline-flex min-h-11 items-center justify-center rounded-md border px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+      >
+        Sign in to follow
+      </Link>
+    );
+  }
+
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => void toggleFollow()}
+        disabled={isSaving}
+        aria-pressed={isFollowing}
+        aria-busy={isSaving}
+        className="border-border text-foreground hover:bg-surface-muted active:bg-surface-muted inline-flex min-h-11 min-w-28 items-center justify-center rounded-md border px-5 text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
+      >
+        {isSaving
+          ? "Saving…"
+          : isFollowing
+            ? "Following"
+            : `Follow ${profileName}`}
+      </button>
+      {error ? (
+        <p role="alert" className="text-danger mt-2 text-sm leading-6">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
