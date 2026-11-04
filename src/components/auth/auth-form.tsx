@@ -61,7 +61,7 @@ function TextField({
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
         onChange={(event) => onChange(event.target.value)}
-        className="border-border bg-surface text-foreground placeholder:text-muted-foreground focus:border-accent min-h-12 w-full rounded-md border px-4 text-base transition-colors outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20 motion-reduce:transition-none"
+        className="auth-field-input border-border bg-surface text-foreground placeholder:text-muted-foreground focus:border-accent min-h-12 w-full rounded-md border px-4 text-base transition-colors outline-none focus:ring-2 focus:ring-[color:var(--accent)]/20 motion-reduce:transition-none"
       />
       {error ? (
         <p id={errorId} className="text-danger text-sm" role="alert">
@@ -204,7 +204,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <section className="border-border bg-surface w-full rounded-3xl border p-6 shadow-sm sm:p-9">
+    <section className="auth-form-card border-border bg-surface w-full rounded-3xl border p-6 shadow-sm sm:p-9">
       <div className="mb-8">
         <p className="text-accent mb-3 text-xs font-semibold tracking-[0.16em] uppercase">
           {isRegister ? "Join Pincrest" : "Your Pincrest account"}
