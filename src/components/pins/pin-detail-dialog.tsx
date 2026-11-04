@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { PinComments } from "@/components/pins/pin-comments";
 import type { PinCreator } from "@/services/feed";
 import { getSafeDestinationUrl, type Pin } from "@/services/pins";
 
@@ -145,6 +146,8 @@ export function PinDetailDialog({
               Visit destination
             </a>
           ) : null}
+
+          <PinComments pinId={pin.id} />
 
           <div className="mt-auto pt-8">
             <button
