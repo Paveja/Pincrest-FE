@@ -120,7 +120,7 @@ export function PinFeed() {
           </p>
         </div>
         <Link
-          href="/profile/pins"
+          href="/profile/pins?new=1"
           className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-12 shrink-0 items-center justify-center rounded-full px-6 text-sm font-semibold transition-colors motion-reduce:transition-none"
         >
           Create a Pin
@@ -161,7 +161,7 @@ export function PinFeed() {
             description="When the community shares something new, you’ll find it here. You can also create a Pin of your own."
             action={
               <Link
-                href="/profile/pins"
+                href="/profile/pins?new=1"
                 className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 items-center justify-center rounded-md px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
               >
                 Create your first Pin
@@ -283,7 +283,7 @@ function PinCard({
             type="button"
             onClick={onSave}
             aria-label={`Save ${pin.title} to a Board`}
-            className="bg-accent text-accent-foreground hover:bg-accent-hover absolute top-3 right-3 inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold shadow-lg transition-colors motion-reduce:transition-none"
+            className="bg-accent text-accent-foreground hover:bg-accent-hover absolute top-3 right-3 z-10 inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold shadow-lg transition-colors motion-reduce:transition-none"
           >
             Save
           </button>
@@ -341,11 +341,21 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
   const [likeCount, setLikeCount] = useState(pin.likeCount);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [animationKey, setAnimationKey] = useState(0);
 
   async function toggleLike() {
+    if (isSaving) {
+      return;
+    }
+
     const nextIsLiked = !isLiked;
+    const previousLikeCount = likeCount;
+
     setIsSaving(true);
     setError(null);
+    setIsLiked(nextIsLiked);
+    setLikeCount((count) => Math.max(0, count + (nextIsLiked ? 1 : -1)));
+    setAnimationKey((current) => current + 1);
 
     try {
       if (nextIsLiked) {
@@ -353,10 +363,10 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
       } else {
         await unlikePin(pin.id);
       }
-
-      setIsLiked(nextIsLiked);
-      setLikeCount((count) => Math.max(0, count + (nextIsLiked ? 1 : -1)));
     } catch (cause) {
+      setIsLiked(!nextIsLiked);
+      setLikeCount(previousLikeCount);
+      setAnimationKey((current) => current + 1);
       setError(
         cause instanceof Error
           ? cause.message
@@ -384,7 +394,8 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
           fill={isLiked ? "currentColor" : "none"}
           stroke="currentColor"
           strokeWidth="1.8"
-          className="text-accent size-4"
+          key={`${animationKey}-${isLiked}`}
+          className={`text-accent size-4 ${isLiked && animationKey > 0 ? "pin-like-pop" : ""}`}
         >
           <path
             strokeLinecap="round"
@@ -395,7 +406,10 @@ function PinLikeButton({ pin }: { pin: FeedPin }) {
         <span className="hidden sm:inline">
           {isSaving ? "Saving…" : isLiked ? "Unlike" : "Like"}
         </span>
-        <span className="text-muted-foreground tabular-nums">
+        <span
+          key={animationKey}
+          className={`text-muted-foreground tabular-nums ${animationKey > 0 ? "pin-like-count-value" : ""}`}
+        >
           {likeCount.toLocaleString()}
         </span>
       </button>

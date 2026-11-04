@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PinEditorDialog } from "@/components/pin-editor-dialog";
 import { PinDetailDialog } from "@/components/pins/pin-detail-dialog";
 import { SavePinDialog } from "@/components/boards/save-pin-dialog";
@@ -19,19 +20,31 @@ import {
 
 type EditorState = { mode: "create" } | { mode: "edit"; pin: Pin };
 
+const PIN_IMAGE_RATIOS = ["aspect-[4/5]", "aspect-[3/4]", "aspect-square"];
+
 export function PinManagement() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [pins, setPins] = useState<Pin[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState(0);
-  const [editor, setEditor] = useState<EditorState | null>(null);
+  const [editor, setEditor] = useState<EditorState | null>(() =>
+    searchParams.get("new") === "1" ? { mode: "create" } : null,
+  );
   const [deletingPinId, setDeletingPinId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [detailPin, setDetailPin] = useState<Pin | null>(null);
   const [savePin, setSavePin] = useState<Pin | null>(null);
+
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      router.replace("/profile/pins", { scroll: false });
+    }
+  }, [router, searchParams]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -222,120 +235,124 @@ export function PinManagement() {
           </button>
         </div>
       ) : (
-        <ul className="mt-5 grid grid-cols-2 items-start gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+        <ul className="mt-5 columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4 lg:gap-5">
           {pins.map((pin, index) => {
             const destinationUrl = getSafeDestinationUrl(pin.destinationUrl);
             const canManagePin =
               currentUserId !== null && currentUserId === String(pin.ownerId);
             const pinId = String(pin.id);
+            const imageRatio =
+              PIN_IMAGE_RATIOS[index % PIN_IMAGE_RATIOS.length];
 
             return (
-              <li key={pin.id} className="min-w-0">
-                <div
-                  className={`relative overflow-hidden rounded-2xl ${index % 3 === 1 ? "aspect-[4/3]" : index % 3 === 2 ? "aspect-[3/4]" : "aspect-[4/5]"} bg-surface-muted`}
-                >
-                  <Image
-                    src={pin.imageUrl}
-                    alt={pin.title}
-                    fill
-                    sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
-                    unoptimized
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-3 sm:p-4">
-                  <h3 className="text-foreground line-clamp-2 leading-5 font-semibold">
-                    {pin.title}
-                  </h3>
-                  {pin.description ? (
-                    <p className="text-muted-foreground mt-2 line-clamp-3 text-sm leading-5">
-                      {pin.description}
-                    </p>
-                  ) : null}
-                  <div className="mt-3 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setDetailPin(pin)}
-                      className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 flex-1 items-center justify-center rounded-md border px-2 text-sm font-semibold transition-colors motion-reduce:transition-none"
-                    >
-                      View Pin
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNotice(null);
-                        setActionError(null);
-                        setSavePin(pin);
-                      }}
-                      className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 flex-1 items-center justify-center rounded-md px-2 text-sm font-semibold transition-colors motion-reduce:transition-none"
-                    >
-                      Save
-                    </button>
+              <li key={pin.id} className="mb-4 break-inside-avoid">
+                <article className="group min-w-0">
+                  <div
+                    className={`bg-surface-muted relative overflow-hidden rounded-2xl ${imageRatio}`}
+                  >
+                    <Image
+                      src={pin.imageUrl}
+                      alt={pin.title}
+                      fill
+                      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
+                      unoptimized
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none"
+                    />
                   </div>
-                  {destinationUrl ? (
-                    <a
-                      href={destinationUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-accent hover:text-accent-hover mt-2 inline-flex min-h-11 text-sm font-medium break-all underline decoration-current/40 underline-offset-2"
-                    >
-                      Visit destination
-                    </a>
-                  ) : null}
-
-                  {canManagePin ? (
-                    deletingPinId === pinId ? (
-                      <div
-                        className="border-border mt-4 border-t pt-3"
-                        role="group"
-                        aria-label={`Confirm deleting ${pin.title}`}
+                  <div className="p-3 sm:p-4">
+                    <h3 className="text-foreground line-clamp-2 leading-5 font-semibold">
+                      {pin.title}
+                    </h3>
+                    {pin.description ? (
+                      <p className="text-muted-foreground mt-2 line-clamp-3 text-sm leading-5">
+                        {pin.description}
+                      </p>
+                    ) : null}
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDetailPin(pin)}
+                        className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 flex-1 items-center justify-center rounded-md border px-2 text-sm font-semibold transition-colors motion-reduce:transition-none"
                       >
-                        <p className="text-muted-foreground text-sm leading-5">
-                          Delete this Pin? This can’t be undone.
-                        </p>
-                        <div className="mt-3 flex flex-wrap gap-2">
+                        View Pin
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNotice(null);
+                          setActionError(null);
+                          setSavePin(pin);
+                        }}
+                        className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 flex-1 items-center justify-center rounded-md px-2 text-sm font-semibold transition-colors motion-reduce:transition-none"
+                      >
+                        Save
+                      </button>
+                    </div>
+                    {destinationUrl ? (
+                      <a
+                        href={destinationUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-accent hover:text-accent-hover mt-2 inline-flex min-h-11 text-sm font-medium break-all underline decoration-current/40 underline-offset-2"
+                      >
+                        Visit destination
+                      </a>
+                    ) : null}
+
+                    {canManagePin ? (
+                      deletingPinId === pinId ? (
+                        <div
+                          className="border-border mt-4 border-t pt-3"
+                          role="group"
+                          aria-label={`Confirm deleting ${pin.title}`}
+                        >
+                          <p className="text-muted-foreground text-sm leading-5">
+                            Delete this Pin? This can’t be undone.
+                          </p>
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setDeletingPinId(null)}
+                              disabled={isDeleting}
+                              className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center justify-center rounded-md border px-3 text-sm font-medium disabled:opacity-60"
+                            >
+                              Keep Pin
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleDelete(pin)}
+                              disabled={isDeleting}
+                              className="bg-danger inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+                            >
+                              {isDeleting ? "Deleting…" : "Delete"}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="border-border mt-4 flex gap-2 border-t pt-3">
                           <button
                             type="button"
-                            onClick={() => setDeletingPinId(null)}
-                            disabled={isDeleting}
-                            className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center justify-center rounded-md border px-3 text-sm font-medium disabled:opacity-60"
+                            onClick={() => {
+                              setNotice(null);
+                              setActionError(null);
+                              setEditor({ mode: "edit", pin });
+                            }}
+                            className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 flex-1 items-center justify-center rounded-md border px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
                           >
-                            Keep Pin
+                            Edit
                           </button>
                           <button
                             type="button"
-                            onClick={() => void handleDelete(pin)}
-                            disabled={isDeleting}
-                            className="bg-danger inline-flex min-h-11 items-center justify-center rounded-md px-3 text-sm font-semibold text-white hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+                            onClick={() => setDeletingPinId(pinId)}
+                            className="text-danger hover:bg-danger/5 inline-flex min-h-11 flex-1 items-center justify-center rounded-md px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
                           >
-                            {isDeleting ? "Deleting…" : "Delete"}
+                            Delete
                           </button>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="border-border mt-4 flex gap-2 border-t pt-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setNotice(null);
-                            setActionError(null);
-                            setEditor({ mode: "edit", pin });
-                          }}
-                          className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 flex-1 items-center justify-center rounded-md border px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeletingPinId(pinId)}
-                          className="text-danger hover:bg-danger/5 inline-flex min-h-11 flex-1 items-center justify-center rounded-md px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    )
-                  ) : null}
-                </div>
+                      )
+                    ) : null}
+                  </div>
+                </article>
               </li>
             );
           })}
