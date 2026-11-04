@@ -183,3 +183,62 @@ export async function updateMyProfile(
 
   return getResponseData(response, isUserProfile, "updated profile");
 }
+
+function getConnectionListPath(
+  userId: string,
+  relation: "followers" | "following",
+  page: number,
+  limit: number,
+): string {
+  if (!Number.isSafeInteger(page) || page < 1) {
+    throw new ApiError("The connection page must be a positive integer.", null);
+  }
+
+  if (!Number.isSafeInteger(limit) || limit < 1) {
+    throw new ApiError(
+      "The connection page size must be a positive integer.",
+      null,
+    );
+  }
+
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+
+  return `/api/v1/users/${encodeURIComponent(userId)}/${relation}?${params.toString()}`;
+}
+
+export function followUser(userId: string): Promise<void> {
+  return apiRequest<void>(
+    `/api/v1/users/${encodeURIComponent(userId)}/follow`,
+    { method: "POST" },
+  );
+}
+
+export function unfollowUser(userId: string): Promise<void> {
+  return apiRequest<void>(
+    `/api/v1/users/${encodeURIComponent(userId)}/follow`,
+    { method: "DELETE" },
+  );
+}
+
+export function getUserFollowers(
+  userId: string,
+  page = 1,
+  limit = 20,
+): Promise<unknown> {
+  return apiRequest<unknown>(
+    getConnectionListPath(userId, "followers", page, limit),
+  );
+}
+
+export function getUserFollowing(
+  userId: string,
+  page = 1,
+  limit = 20,
+): Promise<unknown> {
+  return apiRequest<unknown>(
+    getConnectionListPath(userId, "following", page, limit),
+  );
+}

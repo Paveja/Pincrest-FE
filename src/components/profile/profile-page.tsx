@@ -208,6 +208,15 @@ function ProfileView({
             <Count label="following" value={profile.followingCount} />
             <Count label="pins" value={profile.pinsCount} />
           </dl>
+          {!isMine ? (
+            <p
+              role="status"
+              className="text-muted-foreground bg-surface-muted mt-4 rounded-md px-4 py-3 text-left text-sm leading-6"
+            >
+              Follow controls and connection lists are pending backend contract
+              confirmation.
+            </p>
+          ) : null}
         </div>
 
         {isMine ? (
