@@ -431,13 +431,13 @@ function PinWall({ pins }: { pins: ProfilePin[] }) {
           {notice}
         </p>
       ) : null}
-      <ul className="columns-2 gap-4 sm:columns-3 lg:columns-4">
+      <ul className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4 lg:gap-5">
         {pins.map((pin, index) => {
           const imageUrl = getSafeImageUrl(pin.imageUrl);
           const ratioClass = imageRatios[index % imageRatios.length];
 
           return (
-            <li key={pin.id} className="mb-4 break-inside-avoid">
+            <li key={pin.id} className="mb-4 break-inside-avoid sm:mb-5">
               <article className="group min-w-0">
                 <div
                   className={`bg-surface-muted relative overflow-hidden rounded-2xl ${ratioClass}`}

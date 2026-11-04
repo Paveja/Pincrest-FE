@@ -23,6 +23,8 @@ interface BoardDetailProps {
   boardId: string;
 }
 
+const PIN_IMAGE_RATIOS = ["aspect-[4/5]", "aspect-[3/4]", "aspect-square"];
+
 export function BoardDetail({ boardId }: BoardDetailProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -287,23 +289,27 @@ export function BoardDetail({ boardId }: BoardDetailProps) {
             ) : null}
           </div>
         ) : (
-          <ul className="columns-2 gap-4 sm:columns-3 lg:columns-4">
-            {pins.map((pin) => {
+          <ul className="columns-2 gap-3 sm:columns-3 sm:gap-4 lg:columns-4 lg:gap-5">
+            {pins.map((pin, index) => {
               const destinationUrl = getSafeDestinationUrl(pin.destinationUrl);
               const isConfirming = confirmRemovePinId === String(pin.id);
               const isRemoving = activeActionId === String(pin.id);
+              const imageRatio =
+                PIN_IMAGE_RATIOS[index % PIN_IMAGE_RATIOS.length];
 
               return (
                 <li key={pin.id} className="mb-4 break-inside-avoid">
                   <article className="group min-w-0">
-                    <div className="bg-surface-muted relative aspect-[4/5] overflow-hidden rounded-2xl">
+                    <div
+                      className={`bg-surface-muted relative overflow-hidden rounded-2xl ${imageRatio}`}
+                    >
                       <Image
                         src={pin.imageUrl}
                         alt={pin.title}
                         fill
                         unoptimized
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                        className="object-cover"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none"
                       />
                     </div>
                     <div className="p-3 sm:p-4">

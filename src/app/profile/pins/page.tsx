@@ -1,10 +1,13 @@
+import { RequireAuth } from "@/components/auth/require-auth";
 import { AppShell } from "@/components/layout/app-shell";
 import { PinManagement } from "@/components/pin-management";
 
 export default function MyPinsPage() {
   return (
     <AppShell>
-      <PinManagement />
+      <RequireAuth>
+        <PinManagement />
+      </RequireAuth>
     </AppShell>
   );
 }
