@@ -78,11 +78,15 @@ export function parsePin(value: unknown): Pin {
 }
 
 function parseSinglePin(payload: unknown): Pin {
-  if (!isRecord(payload) || !isRecord(payload.data)) {
+  if (
+    !isRecord(payload) ||
+    !isRecord(payload.data) ||
+    !isRecord(payload.data.pin)
+  ) {
     throw new Error("The Pin service returned an invalid response.");
   }
 
-  return parsePin(payload.data);
+  return parsePin(payload.data.pin);
 }
 
 export async function getMyPins(signal?: AbortSignal): Promise<Pin[]> {

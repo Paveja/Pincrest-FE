@@ -212,14 +212,14 @@ function ProfileView({
             </p>
           ) : null}
           <dl className="mt-5 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm sm:justify-start">
-            <Count label="followers" value={profile.followersCount} />
+            <Count label="followers" value={profile.followerCount} />
             <Count label="following" value={profile.followingCount} />
-            <Count label="pins" value={profile.pinsCount} />
+            <Count label="pins" value={profile.createdPinsCount} />
           </dl>
           {!isMine && !isOwnProfile ? (
             <FollowButton
               key={profile.id}
-              profileId={profile.id}
+              profileId={profile.username}
               profileName={profile.name}
               initialIsFollowing={profile.isFollowing === true}
             />
@@ -266,7 +266,7 @@ function ProfileView({
             Pins
           </h2>
           <span className="text-muted-foreground text-sm tabular-nums">
-            {profile.pinsCount.toLocaleString()}
+            {profile.createdPinsCount.toLocaleString()}
           </span>
         </div>
 
@@ -275,14 +275,14 @@ function ProfileView({
         ) : pins.length === 0 ? (
           <EmptyState
             title={
-              profile.pinsCount > 0
+              profile.createdPinsCount > 0
                 ? "Pins aren't available right now"
                 : isMine
                   ? "Your pinboard is ready"
                   : "No pins yet"
             }
             description={
-              profile.pinsCount > 0
+              profile.createdPinsCount > 0
                 ? "This profile has pins, but none were returned by the pin feed. Try again shortly."
                 : isMine
                   ? "Pins you create will find a home here."
