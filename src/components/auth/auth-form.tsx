@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ApiError } from "@/services/api-client";
 import { login, register } from "@/services/auth";
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth } from "@/components/auth-provider";
 import { LoadingState } from "@/components/states/loading-state";
 
 export type AuthFormMode = "login" | "register";
@@ -182,7 +182,11 @@ export function AuthForm({ mode }: AuthFormProps) {
         const apiFieldErrors = getFieldErrors(cause);
         setFieldErrors(apiFieldErrors);
         focusFirstError(apiFieldErrors);
-        setFormError(cause.message);
+        setFormError(
+          mode === "login" && cause.status === 401
+            ? "Email or password is incorrect."
+            : cause.message,
+        );
       } else {
         setFormError("We couldn’t complete your request. Please try again.");
       }
@@ -191,7 +195,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     }
   }
 
-  if (status === "loading") {
+  if (status === "checking") {
     return <LoadingState label="Checking your session…" />;
   }
 
