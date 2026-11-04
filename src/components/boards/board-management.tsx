@@ -222,12 +222,12 @@ export function BoardManagement({ username }: BoardManagementProps) {
 
             return (
               <li key={board.id} className="min-w-0">
-                <article className="border-border bg-surface overflow-hidden rounded-lg border">
+                <article className="group min-w-0">
                   <Link
                     href={`/boards/${encodeURIComponent(String(board.id))}`}
                     className="group block focus-visible:outline-offset-[-3px]"
                   >
-                    <div className="bg-surface-muted relative aspect-[16/9] overflow-hidden">
+                    <div className="bg-surface-muted relative aspect-[4/3] overflow-hidden rounded-2xl">
                       {coverImage ? (
                         <Image
                           src={coverImage}

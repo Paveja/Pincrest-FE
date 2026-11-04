@@ -438,9 +438,9 @@ function PinWall({ pins }: { pins: ProfilePin[] }) {
 
           return (
             <li key={pin.id} className="mb-4 break-inside-avoid">
-              <article className="group border-border bg-surface overflow-hidden rounded-lg border">
+              <article className="group min-w-0">
                 <div
-                  className={`bg-surface-muted relative overflow-hidden ${ratioClass}`}
+                  className={`bg-surface-muted relative overflow-hidden rounded-2xl ${ratioClass}`}
                 >
                   {imageUrl ? (
                     <Image

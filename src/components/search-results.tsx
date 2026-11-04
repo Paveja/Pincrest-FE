@@ -108,11 +108,11 @@ export function SearchResults() {
   const isLoading = Boolean(query && !currentResponse && !currentError);
 
   return (
-    <section className="mx-auto w-full max-w-6xl px-5 py-9 sm:px-8 sm:py-12">
-      <header className="border-border flex flex-col gap-3 border-b pb-6 sm:flex-row sm:items-end sm:justify-between">
+    <section className="mx-auto w-full max-w-[1800px] px-4 py-6 sm:px-6 sm:py-9 2xl:px-10">
+      <header className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-accent mb-2 text-xs font-semibold tracking-[0.16em] uppercase">
-            Pincrest / Explore
+          <p className="text-muted-foreground mb-2 text-sm font-semibold">
+            Explore
           </p>
           <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
             Search
@@ -131,17 +131,17 @@ export function SearchResults() {
 
       <div
         role="group"
-        className="border-border mt-5 flex flex-wrap gap-2 border-b"
+        className="bg-surface-muted inline-flex flex-wrap gap-1 rounded-full p-1"
         aria-label="Search result type"
       >
         <button
           type="button"
           aria-pressed={type === "pins"}
           onClick={() => updateSearchParams({ type: "pins", page: "1" })}
-          className={`inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-semibold transition-colors motion-reduce:transition-none ${
+          className={`inline-flex min-h-11 items-center rounded-full px-5 text-sm font-semibold transition-colors motion-reduce:transition-none ${
             type === "pins"
-              ? "border-accent text-accent"
-              : "text-muted-foreground hover:text-foreground border-transparent"
+              ? "bg-surface text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           Pins
@@ -150,10 +150,10 @@ export function SearchResults() {
           type="button"
           aria-pressed={type === "users"}
           onClick={() => updateSearchParams({ type: "users", page: "1" })}
-          className={`inline-flex min-h-11 items-center border-b-2 px-4 text-sm font-semibold transition-colors motion-reduce:transition-none ${
+          className={`inline-flex min-h-11 items-center rounded-full px-5 text-sm font-semibold transition-colors motion-reduce:transition-none ${
             type === "users"
-              ? "border-accent text-accent"
-              : "text-muted-foreground hover:text-foreground border-transparent"
+              ? "bg-surface text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           People
@@ -223,9 +223,9 @@ export function SearchResults() {
 
                 return (
                   <li key={pin.id} className="mb-4 break-inside-avoid sm:mb-5">
-                    <article className="group border-border bg-surface overflow-hidden rounded-lg border">
+                    <article className="group min-w-0">
                       <div
-                        className={`bg-surface-muted relative overflow-hidden ${ratio}`}
+                        className={`bg-surface-muted relative overflow-hidden rounded-2xl ${ratio}`}
                       >
                         {imageUrl ? (
                           <Image

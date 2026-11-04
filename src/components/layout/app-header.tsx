@@ -104,32 +104,30 @@ export function AppHeader() {
   }
 
   return (
-    <header className="border-border bg-surface border-b">
-      <div className="mx-auto flex min-h-[4.5rem] max-w-6xl flex-wrap items-center justify-between gap-2 px-5 py-2 lg:flex-nowrap lg:gap-4 lg:px-8 lg:py-0">
+    <header className="bg-surface/95 border-border sticky top-0 z-40 border-b backdrop-blur-md">
+      <div className="mx-auto flex min-h-[4.5rem] max-w-[1800px] flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2 sm:px-6 lg:flex-nowrap lg:px-8">
         <Link
           href="/"
           aria-label="Pincrest home"
-          className="text-foreground hover:text-accent-hover inline-flex min-h-11 items-center gap-3 rounded-md transition-colors motion-reduce:transition-none"
+          className="text-foreground hover:text-accent inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full transition-colors motion-reduce:transition-none"
         >
           <span
             aria-hidden="true"
-            className="bg-accent text-accent-foreground grid size-8 place-items-center rounded-md text-sm font-bold"
-          >
-            P
-          </span>
-          <span className="text-lg font-semibold tracking-tight">Pincrest</span>
+            className="bg-accent size-2.5 rounded-full"
+          />
+          <span className="text-xl font-bold tracking-tight">Pincrest</span>
         </Link>
 
         <form
           role="search"
           aria-label="Search Pincrest"
           onSubmit={handleSearchSubmit}
-          className="order-2 flex w-full sm:order-none sm:max-w-xl sm:min-w-48 sm:flex-1"
+          className="order-3 flex w-full sm:order-none sm:min-w-40 sm:flex-1"
         >
           <label className="sr-only" htmlFor="site-search">
             Search Pins and people
           </label>
-          <div className="relative flex-1">
+          <div className="focus-within:ring-accent/25 bg-surface-muted flex w-full items-center gap-2 rounded-full p-1.5 pl-5 focus-within:ring-2">
             <input
               key={`${pathname}:${searchParams.get("q") ?? ""}`}
               ref={searchInputRef}
@@ -142,27 +140,38 @@ export function AppHeader() {
               maxLength={120}
               placeholder="Search Pins and people"
               autoComplete="off"
-              className="border-border bg-background text-foreground placeholder:text-muted-foreground focus:border-accent h-11 w-full rounded-md border py-2 pr-20 pl-3 text-sm transition-colors outline-none motion-reduce:transition-none"
+              className="text-foreground placeholder:text-muted-foreground min-h-11 min-w-0 flex-1 bg-transparent text-sm outline-none"
             />
             <button
               type="submit"
               aria-label="Search"
-              className="bg-accent text-accent-foreground hover:bg-accent-hover absolute top-1/2 right-1 inline-flex min-h-11 -translate-y-1/2 items-center justify-center rounded px-3 text-sm font-semibold transition-colors motion-reduce:transition-none"
+              className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-colors motion-reduce:transition-none"
             >
-              Search
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="size-5"
+              >
+                <circle cx="10.8" cy="10.8" r="6.8" />
+                <path strokeLinecap="round" d="m16 16 4.5 4.5" />
+              </svg>
             </button>
           </div>
         </form>
 
         <nav
-          className="order-3 w-full sm:order-none sm:w-auto"
+          className="order-4 w-full overflow-x-auto sm:order-none sm:w-auto"
           aria-label="Primary navigation"
         >
-          <ul className="flex items-center justify-between gap-0.5 sm:justify-end sm:gap-1">
+          <ul className="flex min-w-max items-center gap-1 sm:justify-end">
             <li>
               <Link
                 href="/"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
+                aria-current={pathname === "/" ? "page" : undefined}
+                className={`inline-flex min-h-11 items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors motion-reduce:transition-none sm:px-4 ${pathname === "/" ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-surface-muted"}`}
               >
                 Discover
               </Link>
@@ -170,7 +179,8 @@ export function AppHeader() {
             <li>
               <Link
                 href="/profile/pins"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
+                aria-current={pathname === "/profile/pins" ? "page" : undefined}
+                className={`inline-flex min-h-11 items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors motion-reduce:transition-none sm:px-4 ${pathname === "/profile/pins" ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-surface-muted"}`}
               >
                 Your Pins
               </Link>
@@ -178,7 +188,10 @@ export function AppHeader() {
             <li>
               <Link
                 href="/boards"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
+                aria-current={
+                  pathname.startsWith("/boards") ? "page" : undefined
+                }
+                className={`inline-flex min-h-11 items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors motion-reduce:transition-none sm:px-4 ${pathname.startsWith("/boards") ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-surface-muted"}`}
               >
                 Boards
               </Link>
@@ -186,7 +199,14 @@ export function AppHeader() {
             <li>
               <Link
                 href="/profile"
-                className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors motion-reduce:transition-none sm:px-4"
+                aria-current={
+                  pathname === "/profile" ||
+                  pathname.startsWith("/users/") ||
+                  pathname === "/settings/profile"
+                    ? "page"
+                    : undefined
+                }
+                className={`inline-flex min-h-11 items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors motion-reduce:transition-none sm:px-4 ${pathname === "/profile" || pathname.startsWith("/users/") || pathname === "/settings/profile" ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-surface-muted"}`}
               >
                 Profile
               </Link>
@@ -197,7 +217,7 @@ export function AppHeader() {
                   type="button"
                   onClick={() => void handleLogout()}
                   disabled={isLoggingOut}
-                  className="text-muted-foreground hover:bg-surface-muted hover:text-foreground inline-flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none sm:px-4"
+                  className="text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none sm:px-4"
                 >
                   {isLoggingOut ? "Signing out…" : "Sign out"}
                 </button>
@@ -209,7 +229,7 @@ export function AppHeader() {
       {logoutError ? (
         <p
           role="alert"
-          className="text-danger mx-auto max-w-6xl px-5 pb-3 text-sm sm:px-8"
+          className="text-danger mx-auto max-w-[1800px] px-5 pb-3 text-sm sm:px-8"
         >
           {logoutError}
         </p>
