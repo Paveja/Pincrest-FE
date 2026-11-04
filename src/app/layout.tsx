@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { AuthProvider } from "@/components/auth-provider";
+import { LoadingState } from "@/components/states/loading-state";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,7 +16,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="min-h-full antialiased">
       <body className="min-h-full">
-        <AuthProvider>{children}</AuthProvider>
+        <Suspense
+          fallback={
+            <main className="min-h-screen px-6 py-12">
+              <LoadingState label="Checking your session" />
+            </main>
+          }
+        >
+          <AuthProvider>{children}</AuthProvider>
+        </Suspense>
       </body>
     </html>
   );

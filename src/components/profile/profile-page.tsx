@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { EmptyState } from "@/components/states/empty-state";
 import { ErrorState } from "@/components/states/error-state";
 import { LoadingState } from "@/components/states/loading-state";
+import { PinDetailDialog } from "@/components/pins/pin-detail-dialog";
+import { SavePinDialog } from "@/components/boards/save-pin-dialog";
 import { ApiError } from "@/services/api-client";
 import {
   getCurrentSession,
@@ -226,6 +228,19 @@ function ProfileView({
         ) : null}
       </header>
 
+      <div className="mt-5">
+        <Link
+          href={
+            isMine
+              ? "/boards"
+              : `/users/${encodeURIComponent(profile.username)}/boards`
+          }
+          className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 items-center justify-center rounded-md border px-5 text-sm font-semibold transition-colors motion-reduce:transition-none"
+        >
+          {isMine ? "Manage your Boards" : `View @${profile.username}’s Boards`}
+        </Link>
+      </div>
+
       <section aria-labelledby="profile-pins-heading" className="pt-8 sm:pt-10">
         <div className="mb-6 flex items-baseline justify-between gap-4">
           <h2
@@ -316,42 +331,88 @@ function ProfileAvatar({
 
 function PinWall({ pins }: { pins: ProfilePin[] }) {
   const imageRatios = ["aspect-[4/5]", "aspect-[3/4]", "aspect-square"];
+  const [detailPin, setDetailPin] = useState<ProfilePin | null>(null);
+  const [savePin, setSavePin] = useState<ProfilePin | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   return (
-    <ul className="columns-2 gap-4 sm:columns-3 lg:columns-4">
-      {pins.map((pin, index) => {
-        const imageUrl = getSafeImageUrl(pin.imageUrl);
-        const ratioClass = imageRatios[index % imageRatios.length];
+    <>
+      {notice ? (
+        <p role="status" className="text-accent mb-4 text-sm font-medium">
+          {notice}
+        </p>
+      ) : null}
+      <ul className="columns-2 gap-4 sm:columns-3 lg:columns-4">
+        {pins.map((pin, index) => {
+          const imageUrl = getSafeImageUrl(pin.imageUrl);
+          const ratioClass = imageRatios[index % imageRatios.length];
 
-        return (
-          <li key={pin.id} className="mb-4 break-inside-avoid">
-            <article className="group border-border bg-surface overflow-hidden rounded-lg border">
-              <div
-                className={`bg-surface-muted relative overflow-hidden ${ratioClass}`}
-              >
-                {imageUrl ? (
-                  <Image
-                    src={imageUrl}
-                    alt={pin.title}
-                    fill
-                    unoptimized
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className="object-cover transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none"
-                  />
-                ) : (
-                  <span className="text-muted-foreground grid h-full place-items-center px-4 text-center text-xs">
-                    Image unavailable
-                  </span>
-                )}
-              </div>
-              <h3 className="text-foreground px-3 py-3 text-sm leading-5 font-medium">
-                {pin.title}
-              </h3>
-            </article>
-          </li>
-        );
-      })}
-    </ul>
+          return (
+            <li key={pin.id} className="mb-4 break-inside-avoid">
+              <article className="group border-border bg-surface overflow-hidden rounded-lg border">
+                <div
+                  className={`bg-surface-muted relative overflow-hidden ${ratioClass}`}
+                >
+                  {imageUrl ? (
+                    <Image
+                      src={imageUrl}
+                      alt={pin.title}
+                      fill
+                      unoptimized
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className="object-cover transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none"
+                    />
+                  ) : (
+                    <span className="text-muted-foreground grid h-full place-items-center px-4 text-center text-xs">
+                      Image unavailable
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-foreground px-3 pt-3 text-sm leading-5 font-medium">
+                  {pin.title}
+                </h3>
+                <div className="flex gap-2 px-3 pt-2 pb-3">
+                  <button
+                    type="button"
+                    onClick={() => setDetailPin(pin)}
+                    className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 flex-1 items-center justify-center rounded-md border px-2 text-sm font-semibold transition-colors motion-reduce:transition-none"
+                  >
+                    View Pin
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNotice(null);
+                      setSavePin(pin);
+                    }}
+                    className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 flex-1 items-center justify-center rounded-md px-2 text-sm font-semibold transition-colors motion-reduce:transition-none"
+                  >
+                    Save
+                  </button>
+                </div>
+              </article>
+            </li>
+          );
+        })}
+      </ul>
+      {detailPin ? (
+        <PinDetailDialog
+          pin={detailPin}
+          onClose={() => setDetailPin(null)}
+          onSave={() => {
+            setDetailPin(null);
+            setSavePin(detailPin);
+          }}
+        />
+      ) : null}
+      {savePin ? (
+        <SavePinDialog
+          pin={savePin}
+          onClose={() => setSavePin(null)}
+          onSaved={(board) => setNotice(`Saved to ${board.name}.`)}
+        />
+      ) : null}
+    </>
   );
 }
 

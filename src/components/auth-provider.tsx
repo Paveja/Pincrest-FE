@@ -60,12 +60,15 @@ async function loadCurrentUser(): Promise<AuthUser | null> {
 }
 
 function isPublicAuthPath(pathname: string): boolean {
-  return (
+  const isAuthPath =
     pathname === "/login" ||
     pathname.startsWith("/login/") ||
     pathname === "/register" ||
-    pathname.startsWith("/register/")
-  );
+    pathname.startsWith("/register/");
+  const isPublicUserPath = pathname.startsWith("/users/");
+  const isPublicBoardPath = /^\/boards\/[^/]+\/?$/.test(pathname);
+
+  return isAuthPath || isPublicUserPath || isPublicBoardPath;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -126,7 +129,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (status === "authenticated" && isPublicAuthPath(pathname)) {
+    if (
+      status === "authenticated" &&
+      (pathname === "/login" ||
+        pathname.startsWith("/login/") ||
+        pathname === "/register" ||
+        pathname.startsWith("/register/"))
+    ) {
       router.replace("/");
     } else if (status === "unauthenticated" && !isPublicAuthPath(pathname)) {
       router.replace("/login");
@@ -173,7 +182,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isRedirecting =
     status === "checking" ||
-    (status === "authenticated" && isPublicAuthPath(pathname)) ||
+    (status === "authenticated" &&
+      (pathname === "/login" ||
+        pathname.startsWith("/login/") ||
+        pathname === "/register" ||
+        pathname.startsWith("/register/"))) ||
     (status === "unauthenticated" && !isPublicAuthPath(pathname));
 
   if (isRedirecting) {

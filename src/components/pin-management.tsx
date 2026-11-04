@@ -3,7 +3,10 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { PinEditorDialog } from "@/components/pin-editor-dialog";
+import { PinDetailDialog } from "@/components/pins/pin-detail-dialog";
+import { SavePinDialog } from "@/components/boards/save-pin-dialog";
 import { useAuth } from "@/components/auth-provider";
+import type { Board } from "@/services/boards";
 import {
   createPin,
   deletePin,
@@ -27,6 +30,8 @@ export function PinManagement() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [detailPin, setDetailPin] = useState<Pin | null>(null);
+  const [savePin, setSavePin] = useState<Pin | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -250,6 +255,26 @@ export function PinManagement() {
                       {pin.description}
                     </p>
                   ) : null}
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setDetailPin(pin)}
+                      className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 flex-1 items-center justify-center rounded-md border px-2 text-sm font-semibold transition-colors motion-reduce:transition-none"
+                    >
+                      View Pin
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNotice(null);
+                        setActionError(null);
+                        setSavePin(pin);
+                      }}
+                      className="bg-accent text-accent-foreground hover:bg-accent-hover inline-flex min-h-11 flex-1 items-center justify-center rounded-md px-2 text-sm font-semibold transition-colors motion-reduce:transition-none"
+                    >
+                      Save
+                    </button>
+                  </div>
                   {destinationUrl ? (
                     <a
                       href={destinationUrl}
@@ -326,6 +351,26 @@ export function PinManagement() {
           pin={editor.mode === "edit" ? editor.pin : null}
           onClose={() => setEditor(null)}
           onSave={handleSave}
+        />
+      ) : null}
+      {detailPin ? (
+        <PinDetailDialog
+          pin={detailPin}
+          onClose={() => setDetailPin(null)}
+          onSave={() => {
+            setDetailPin(null);
+            setSavePin(detailPin);
+          }}
+        />
+      ) : null}
+      {savePin ? (
+        <SavePinDialog
+          pin={savePin}
+          onClose={() => setSavePin(null)}
+          onSaved={(board: Board) => {
+            setNotice(`Saved to ${board.name}.`);
+            setActionError(null);
+          }}
         />
       ) : null}
     </section>

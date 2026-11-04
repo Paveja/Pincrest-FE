@@ -104,6 +104,8 @@ async function getResponseErrorMessage(response: Response): Promise<string> {
   }
 
   return fallbackMessage;
+}
+
 function getFieldErrors(payload: unknown): Record<string, string> {
   if (!payload || typeof payload !== "object") {
     return {};
@@ -292,19 +294,12 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    const message = await getResponseErrorMessage(response);
-    throw new ApiError(message, response.status);
     if (response.status === 401 && typeof window !== "undefined") {
       window.dispatchEvent(new Event(AUTH_UNAUTHORIZED_EVENT));
     }
 
-    const payload = await readErrorPayload(response);
-    throw new ApiError(
-      getApiErrorMessage(payload, response.status),
-      response.status,
-      undefined,
-      getFieldErrors(payload),
-    );
+    const message = await getResponseErrorMessage(response);
+    throw new ApiError(message, response.status);
   }
 
   if (response.status === 204) {
