@@ -7,7 +7,7 @@ import { SavePinDialog } from "@/components/boards/save-pin-dialog";
 import { PinDetailDialog } from "@/components/pins/pin-detail-dialog";
 import { EmptyState } from "@/components/states/empty-state";
 import { getPinFeedPage, type FeedPin } from "@/services/feed";
-import { getSafeDestinationUrl } from "@/services/pins";
+import { getSafeDestinationUrl, likePin, unlikePin } from "@/services/pins";
 
 const skeletonRatios = [
   "aspect-[4/5]",
@@ -290,6 +290,8 @@ function PinCard({
           </p>
         ) : null}
 
+        <PinLikeButton pin={pin} />
+
         <div className="flex items-center justify-between gap-2 px-3 pt-3 pb-3 sm:px-4 sm:pb-4">
           <Link
             href={`/users/${encodeURIComponent(pin.creator.username)}`}
@@ -326,6 +328,76 @@ function PinCard({
         </div>
       </article>
     </li>
+  );
+}
+
+function PinLikeButton({ pin }: { pin: FeedPin }) {
+  const [isLiked, setIsLiked] = useState(pin.isLiked);
+  const [likeCount, setLikeCount] = useState(pin.likeCount);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function toggleLike() {
+    const nextIsLiked = !isLiked;
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      if (nextIsLiked) {
+        await likePin(pin.id);
+      } else {
+        await unlikePin(pin.id);
+      }
+
+      setIsLiked(nextIsLiked);
+      setLikeCount((count) => Math.max(0, count + (nextIsLiked ? 1 : -1)));
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : "Your reaction could not be saved. Try again.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="px-3 pt-1 sm:px-4">
+      <button
+        type="button"
+        onClick={() => void toggleLike()}
+        disabled={isSaving}
+        aria-pressed={isLiked}
+        aria-busy={isSaving}
+        aria-label={`${isLiked ? "Unlike" : "Like"} ${pin.title}. ${likeCount} likes.`}
+        className="border-border text-foreground hover:bg-surface-muted inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md border px-3 text-sm font-semibold transition-colors disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none"
+      >
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill={isLiked ? "currentColor" : "none"}
+          stroke="currentColor"
+          strokeWidth="1.8"
+          className="text-accent size-4"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M20.8 8.7c0 5.5-8.8 10.3-8.8 10.3S3.2 14.2 3.2 8.7A4.7 4.7 0 0 1 12 6.3a4.7 4.7 0 0 1 8.8 2.4Z"
+          />
+        </svg>
+        <span>{isSaving ? "Saving…" : isLiked ? "Unlike" : "Like"}</span>
+        <span className="text-muted-foreground tabular-nums">
+          {likeCount.toLocaleString()}
+        </span>
+      </button>
+      {error ? (
+        <p role="alert" className="text-danger pt-2 text-xs leading-5">
+          {error}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

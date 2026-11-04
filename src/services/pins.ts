@@ -128,6 +128,20 @@ export function deletePin(id: EntityId): Promise<void> {
   });
 }
 
+export function likePin(id: EntityId): Promise<void> {
+  return apiRequest<void>(
+    `/api/v1/pins/${encodeURIComponent(String(id))}/like`,
+    { method: "PUT" },
+  );
+}
+
+export function unlikePin(id: EntityId): Promise<void> {
+  return apiRequest<void>(
+    `/api/v1/pins/${encodeURIComponent(String(id))}/like`,
+    { method: "DELETE" },
+  );
+}
+
 export async function uploadPinImage(
   image: File,
   onProgress: (percentage: number) => void,
