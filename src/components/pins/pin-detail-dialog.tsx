@@ -1,11 +1,15 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
+import type { PinCreator } from "@/services/feed";
 import { getSafeDestinationUrl, type Pin } from "@/services/pins";
 
 export type PinDetail = Pick<Pin, "id" | "title" | "imageUrl"> &
-  Partial<Pick<Pin, "description" | "destinationUrl">>;
+  Partial<Pick<Pin, "description" | "destinationUrl">> & {
+    creator?: PinCreator;
+  };
 
 interface PinDetailDialogProps {
   pin: PinDetail;
@@ -21,6 +25,7 @@ export function PinDetailDialog({
   const dialogRef = useRef<HTMLDialogElement>(null);
   const destinationUrl = getSafeDestinationUrl(pin.destinationUrl);
   const imageUrl = getSafeDestinationUrl(pin.imageUrl);
+  const creatorImageUrl = getSafeDestinationUrl(pin.creator?.profileImage);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -55,7 +60,7 @@ export function PinDetailDialog({
               fill
               sizes="(max-width: 768px) 90vw, 480px"
               unoptimized
-              className="object-cover"
+              className="object-contain"
             />
           ) : (
             <span className="text-muted-foreground grid h-full place-items-center px-4 text-center text-sm">
@@ -95,6 +100,40 @@ export function PinDetailDialog({
               No description was added for this Pin.
             </p>
           )}
+
+          {pin.creator ? (
+            <div className="border-border mt-6 flex items-center gap-3 border-t pt-5">
+              {creatorImageUrl ? (
+                <Image
+                  src={creatorImageUrl}
+                  alt=""
+                  width={40}
+                  height={40}
+                  unoptimized
+                  className="border-border size-10 shrink-0 rounded-full border object-cover"
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  className="bg-surface-muted text-accent border-border grid size-10 shrink-0 place-items-center rounded-full border text-sm font-semibold"
+                >
+                  {pin.creator.name.trim().charAt(0).toLocaleUpperCase() || "P"}
+                </span>
+              )}
+              <div className="min-w-0">
+                <p className="text-muted-foreground text-xs">Shared by</p>
+                <Link
+                  href={`/users/${encodeURIComponent(pin.creator.username)}`}
+                  className="text-foreground hover:text-accent-hover mt-0.5 block min-h-6 truncate text-sm font-semibold"
+                >
+                  {pin.creator.name}
+                </Link>
+                <p className="text-muted-foreground truncate text-xs">
+                  @{pin.creator.username}
+                </p>
+              </div>
+            </div>
+          ) : null}
 
           {destinationUrl ? (
             <a

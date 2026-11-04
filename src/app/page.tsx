@@ -1,14 +1,14 @@
 import { AppShell } from "@/components/layout/app-shell";
-import { PinManagement } from "@/components/pin-management";
+import { PinFeed } from "@/components/pins/pin-feed";
 
 export default function HomePage() {
   return (
     <AppShell>
-      <PinManagement />
+      <PinFeed />
     </AppShell>
   );
 }
 
 export const metadata = {
-  title: "Pincrest",
+  title: "Discover Pins",
 };
